@@ -3,3 +3,6 @@ war.iml
 .project
 .classpath
 .workspace/
+.settings/
+.idea/
+dependency-reduced-pom.xml
