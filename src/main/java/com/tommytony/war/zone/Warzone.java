@@ -1,9 +1,8 @@
 package com.tommytony.war.zone;
 
-import com.google.common.base.Optional;
 import com.tommytony.war.WarPlugin;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import com.tommytony.war.struct.WarCuboid;
+import com.tommytony.war.struct.WarLocation;
 
 import java.sql.SQLException;
 import java.util.regex.Matcher;
@@ -19,7 +18,6 @@ public class Warzone {
     private final String name;
     private final ZoneStorage db;
     private final ZoneConfig config;
-    private Location<World> teleport;
 
     /**
      * Load or create a war zone from the war settings store.
@@ -40,6 +38,20 @@ public class Warzone {
     }
 
     /**
+     * Set the area the zone occupies. Updates position1 and position2 in the database.
+     *
+     * @param cuboid Cuboid region of zone space.
+     */
+    public void setCuboid(WarCuboid cuboid) {
+        try {
+            db.setPosition("position1", cuboid.getMinBlock());
+            db.setPosition("position2", cuboid.getMaxBlock());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Check if the specified name is valid for a zone.
      * Specifically, characters that could be part of a file path or web URL.
      * '.', '/', and '%' are invalid.
@@ -47,7 +59,7 @@ public class Warzone {
      * @param name Potential zone name to check.
      * @return true if the name can be used.
      */
-    public static boolean zoneNameValid(String name) {
+    public static boolean zoneNameInvalid(String name) {
         Matcher m = zoneName.matcher(name);
         return m.find();
     }
@@ -56,12 +68,13 @@ public class Warzone {
         return name;
     }
 
-    public Location<World> getTeleport() {
+    public WarLocation getTeleport() {
         try {
-            Optional<Location> lobby = db.getPosition("lobby", Optional.<World>absent());
-            if (lobby.isPresent())
-                return lobby.<World>get();
-            else throw new RuntimeException("No teleport location found for zone " + name);
+            if (db.hasPosition("lobby")) {
+                return db.getPosition("lobby");
+            } else {
+                throw new RuntimeException("No teleport location found for zone " + name);
+            }
         } catch (SQLException e) {
             plugin.getLogger().error("Retrieving teleport", e);
             throw new RuntimeException("Error in retrieving information from database");

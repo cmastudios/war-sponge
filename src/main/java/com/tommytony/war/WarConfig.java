@@ -34,8 +34,6 @@ public class WarConfig implements Closeable {
      */
     public WarConfig(WarPlugin plugin, File file) throws FileNotFoundException, SQLException {
         this.plugin = plugin;
-        if (!file.exists())
-            throw new FileNotFoundException("Can't find war main database");
         conn = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS settings (option TEXT, value BLOB)");
@@ -92,6 +90,19 @@ public class WarConfig implements Closeable {
     }
 
     /**
+     * Add a zone to the database. Does not create any warzone data files.
+     *
+     * @param zoneName Name of the warzone.
+     * @throws SQLException
+     */
+    public void addZone(String zoneName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO zones (name) VALUES (?)")) {
+            stmt.setString(1, zoneName);
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
      * Get server zone makers. These people have permission to create zones.
      *
      * @return list of zone makers.
@@ -103,8 +114,6 @@ public class WarConfig implements Closeable {
              ResultSet result = stmt.executeQuery("SELECT uuid FROM zonemakers")) {
             while (result.next()) {
                 UUID playerId = UUID.fromString(result.getString(1));
-                if (playerId == null)
-                    continue;
                 Optional<Player> player = plugin.getGame().getServer().getPlayer(playerId);
                 if (player.isPresent())
                     makers.add(player.get());

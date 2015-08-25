@@ -2,17 +2,22 @@ package com.tommytony.war;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.tommytony.war.command.SetZoneCommand;
 import com.tommytony.war.command.WarConfigCommand;
 import com.tommytony.war.command.WarzoneCommand;
+import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.event.Subscribe;
 import org.spongepowered.api.event.state.PreInitializationEvent;
 import org.spongepowered.api.event.state.ServerStartedEvent;
 import org.spongepowered.api.event.state.ServerStartingEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -61,6 +66,7 @@ public class WarPlugin {
         // register commands
         game.getCommandDispatcher().register(this, new WarzoneCommand(this), "warzone", "zone");
         game.getCommandDispatcher().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
+        game.getCommandDispatcher().register(this, new SetZoneCommand(this), "setzone", "zoneset");
     }
 
     public Game getGame() {
@@ -86,7 +92,34 @@ public class WarPlugin {
         return Optional.absent();
     }
 
+    public Warzone createZone(String zoneName) {
+        try {
+            config.addZone(zoneName);
+            Warzone zone = new Warzone(this, zoneName);
+            zones.put(zoneName, zone);
+            return zone;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Map<String, Warzone> getZones() {
         return zones;
+    }
+
+    public Location<World> getSpongeLocation(WarLocation location) {
+        Optional<World> world = this.getGame().getServer().getWorld(location.getWorld());
+        if (!world.isPresent()) {
+            throw new IllegalStateException("Can't find world with name " + location.getWorld());
+        }
+        return world.get().getLocation(location.getX(), location.getY(), location.getZ());
+    }
+
+    public WarLocation getWarLocation(Location<World> location) {
+        return new WarLocation(location.getX(), location.getY(), location.getZ(), location.getExtent().getName());
+    }
+
+    public WarPlayerState getState(Player player) {
+        return WarPlayerState.getState(player.getUniqueId());
     }
 }

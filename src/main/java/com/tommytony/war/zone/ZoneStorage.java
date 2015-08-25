@@ -1,9 +1,7 @@
 package com.tommytony.war.zone;
 
-import com.google.common.base.Optional;
 import com.tommytony.war.WarPlugin;
-import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.World;
+import com.tommytony.war.struct.WarLocation;
 
 import java.io.File;
 import java.sql.*;
@@ -46,7 +44,7 @@ public class ZoneStorage implements AutoCloseable {
         int version;
         try (
                 Statement stmt = connection.createStatement();
-                ResultSet resultSet = stmt.executeQuery("PRAGMA user_version");
+                ResultSet resultSet = stmt.executeQuery("PRAGMA user_version")
         ) {
             version = resultSet.getInt("user_version");
         }
@@ -74,33 +72,24 @@ public class ZoneStorage implements AutoCloseable {
      * Look up a position in the coordinates table.
      *
      * @param name  Name of stored position.
-     * @param world World to assign to the new location.
      * @return the location of the position, or absent if not found.
      * @throws SQLException
      */
-    public Optional<Location> getPosition(String name, Optional<World> world) throws SQLException {
+    public WarLocation getPosition(String name) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT x, y, z, world FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
-                    World resultWorld;
-                    if (world.isPresent()) {
-                        resultWorld = world.get();
-                    } else {
-                        Optional<World> optwld = plugin.getGame().getServer().getWorld(resultSet.getString("world"));
-                        if (optwld.isPresent()) {
-                            resultWorld = optwld.get();
-                        } else {
-                            return Optional.absent();
-                        }
-                    }
-                    return Optional.of(new Location(resultWorld,
-                            resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z")));
+                    return new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"), resultSet.getString("world"));
                 }
             }
         }
-        return Optional.absent();
+        return null;
+    }
+
+    public boolean hasPosition(String name) throws SQLException {
+        return getPosition(name) != null;
     }
 
     /**
@@ -110,20 +99,18 @@ public class ZoneStorage implements AutoCloseable {
      * @param location Location to write to the storage.
      * @throws SQLException
      */
-    public void setPosition(String name, Location location) throws SQLException {
-        World world;
-        if (location.getExtent() instanceof World)
-            world = (World) location.getExtent();
-        else throw new IllegalArgumentException("Location must be in a world");
+    public void setPosition(String name, WarLocation location) throws SQLException {
         String sql;
-        if (this.getPosition(name, Optional.<World>absent()).isPresent())
+        if (this.hasPosition(name)) {
             sql = "UPDATE coordinates SET x = ?, y = ?, z = ?, world = ? WHERE name = ?";
-        else sql = "INSERT INTO coordinates (x, y, z, world, name) VALUES (?, ?, ?, ?, ?)";
+        } else {
+            sql = "INSERT INTO coordinates (x, y, z, world, name) VALUES (?, ?, ?, ?, ?)";
+        }
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setDouble(1, location.getPosition().getX());
-            stmt.setDouble(2, location.getPosition().getY());
-            stmt.setDouble(3, location.getPosition().getZ());
-            stmt.setString(4, world.getName());
+            stmt.setDouble(1, location.getX());
+            stmt.setDouble(2, location.getY());
+            stmt.setDouble(3, location.getZ());
+            stmt.setString(4, location.getWorld());
             stmt.setString(5, name);
             stmt.execute();
         }
