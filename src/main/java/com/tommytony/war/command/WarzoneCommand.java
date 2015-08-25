@@ -44,7 +44,7 @@ public class WarzoneCommand implements CommandCallable {
             return CommandResult.empty();
         }
         Player player = (Player) commandSource;
-        player.setLocation(zone.get().getTeleport());
+        player.setLocation(plugin.getSpongeLocation(zone.get().getTeleport()));
 
         return CommandResult.success();
     }
