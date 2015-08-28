@@ -34,9 +34,19 @@ public class WarzoneCommand implements CommandCallable {
         if (!(commandSource instanceof Player)) {
             return CommandResult.empty();
         }
-        String[] argv = s.split(" ");
-        if (argv.length < 1) {
-            return CommandResult.empty();
+        String[] argv = s.trim().split(" ");
+        if (argv.length == 0 || argv[0].length() == 0) {
+            StringBuilder zones = new StringBuilder();
+            boolean first = true;
+            for (String zoneName : plugin.getZones().keySet()) {
+                if (!first) {
+                    zones.append(", ");
+                }
+                first = false;
+                zones.append(zoneName);
+            }
+            commandSource.sendMessage(Texts.of("Warzones: ", zones.toString()));
+            return CommandResult.success();
         }
         String zoneName = argv[0];
         Optional<Warzone> zone = plugin.getZone(zoneName);

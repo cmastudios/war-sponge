@@ -48,9 +48,9 @@ public class WarConfig implements Closeable {
      *
      * @param setting The type of setting to look up.
      * @return the value of the setting or the default if not found.
-     * @throws SQLException
+     * @throws RuntimeException wrapping SQLException
      */
-    public int getInt(WarSetting setting) throws SQLException {
+    public int getInt(WarSetting setting) {
         try (PreparedStatement stmt = conn.prepareStatement("SELECT value FROM settings WHERE option = ?")) {
             stmt.setString(1, setting.name());
             try (ResultSet result = stmt.executeQuery()) {
@@ -60,6 +60,8 @@ public class WarConfig implements Closeable {
                     return (Integer) setting.defaultValue;
                 }
             }
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
@@ -97,6 +99,19 @@ public class WarConfig implements Closeable {
      */
     public void addZone(String zoneName) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO zones (name) VALUES (?)")) {
+            stmt.setString(1, zoneName);
+            stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Remove a zone from the database. Does not modify any warzone data files.
+     *
+     * @param zoneName Name of the warzone.
+     * @throws SQLException
+     */
+    public void deleteZone(String zoneName) throws SQLException {
+        try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM zones WHERE name = ?")) {
             stmt.setString(1, zoneName);
             stmt.executeUpdate();
         }
@@ -142,7 +157,8 @@ public class WarConfig implements Closeable {
      * Possible types of settings stored in the war server config database.
      */
     public enum WarSetting {
-        MAXZONES(Integer.class, 20);
+        MAXZONES(Integer.class, 20),
+        MAXZONESIZE(Integer.class, 1_000_000);
         private final Class<?> dataType;
         private final Object defaultValue;
 

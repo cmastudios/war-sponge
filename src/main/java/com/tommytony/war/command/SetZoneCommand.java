@@ -7,9 +7,11 @@ import com.tommytony.war.WarPlugin;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
+import com.tommytony.war.zone.ZoneValidator;
 import org.spongepowered.api.entity.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.blockray.BlockRay;
 import org.spongepowered.api.util.blockray.BlockRayHit;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -37,8 +39,8 @@ public class SetZoneCommand implements CommandCallable {
             commandSource.sendMessage(Texts.of("This command cannot be used from console."));
             return CommandResult.empty();
         }
-        String[] args = s.split(" ");
-        if (args.length < 1) {
+        String[] args = s.trim().split(" ");
+        if (args.length == 0 || args[0].length() == 0) {
             return CommandResult.empty();
         }
         if (plugin.getState(player).isCreatingZone() && (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2"))) {
@@ -46,7 +48,7 @@ public class SetZoneCommand implements CommandCallable {
             final Optional<BlockRayHit<World>> block = BlockRay.from(player).filter(BlockRay.<World>onlyAirFilter()).end();
             if (!block.isPresent()) {
                 commandSource.sendMessage(Texts.of("You are not pointing at a block."));
-                return CommandResult.success();
+                return CommandResult.empty();
             }
             if (args[0].equalsIgnoreCase("c1")) {
                 state.setPosition1(plugin.getWarLocation(block.get().getLocation()));
@@ -58,10 +60,16 @@ public class SetZoneCommand implements CommandCallable {
                     return CommandResult.success();
                 }
                 WarLocation pos2 = plugin.getWarLocation(block.get().getLocation());
-                commandSource.sendMessage(Texts.of(MessageFormat.format("Set position 2 of warzone {0} to {1}.", state.getZoneName(), pos2.toString())));
                 WarCuboid cuboid = new WarCuboid(state.getPosition1(), pos2);
+                if (plugin.getValidator().validateDimensions(cuboid) == ZoneValidator.ValidationStatus.INVALID) {
+                    commandSource.sendMessage(Texts.of(TextColors.RED, MessageFormat.format("Failed to create warzone {0} with dimensions {1}. Make your zone larger/smaller by placing your second corner somewhere else.",
+                            state.getZoneName(), cuboid.toString())));
+                    return CommandResult.empty();
+                }
+                commandSource.sendMessage(Texts.of(MessageFormat.format("Set position 2 of warzone {0} to {1}.", state.getZoneName(), pos2.toString())));
                 Warzone zone = plugin.createZone(state.getZoneName());
                 zone.setCuboid(cuboid);
+                zone.setTeleport(plugin.getWarLocation(player.getLocation()));
                 plugin.getState(player).setZoneCreationState(null);
                 commandSource.sendMessage(Texts.of(MessageFormat.format("Successfully created warzone {0} with dimensions {1}.", zone.getName(), cuboid.toString())));
                 return CommandResult.success();
@@ -69,11 +77,11 @@ public class SetZoneCommand implements CommandCallable {
         }
         if (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2")) {
             commandSource.sendMessage(Texts.of("Create a warzone using the command `/setzone <name>' first."));
-            return CommandResult.success();
+            return CommandResult.empty();
         }
-        if (Warzone.zoneNameInvalid(args[0])) {
+        if (plugin.getValidator().validateName(args[0]) == ZoneValidator.ValidationStatus.INVALID) {
             commandSource.sendMessage(Texts.of(MessageFormat.format("Name `{0}'' is invalid for a warzone.", args[0])));
-            return CommandResult.success();
+            return CommandResult.empty();
         }
         plugin.getState(player).setZoneCreationState(new WarPlayerState.ZoneCreationState(args[0]));
         commandSource.sendMessage(Texts.of(MessageFormat.format("You are now creating warzone {0}. Type `/setzone c1'' to place the first corner based on the block under your cursor.", args[0])));

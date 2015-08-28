@@ -2,11 +2,10 @@ package com.tommytony.war;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.tommytony.war.command.SetZoneCommand;
-import com.tommytony.war.command.WarConfigCommand;
-import com.tommytony.war.command.WarzoneCommand;
+import com.tommytony.war.command.*;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
+import com.tommytony.war.zone.ZoneValidator;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.entity.player.Player;
@@ -38,6 +37,7 @@ public class WarPlugin {
 
     private WarConfig config;
     private Map<String, Warzone> zones;
+    private ZoneValidator validator;
 
     @Subscribe
     public void onConstruction(PreInitializationEvent event) throws InstantiationException {
@@ -55,7 +55,9 @@ public class WarPlugin {
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());
         config = new WarConfig(this, new File(dataDir, "war.sl3"));
+        validator = new ZoneValidator(config);
         for (String zoneName : config.getZones()) {
+            logger.info("[War] Loading zone " + zoneName + "...");
             Warzone zone = new Warzone(this, zoneName);
             zones.put(zoneName, zone);
         }
@@ -67,6 +69,8 @@ public class WarPlugin {
         game.getCommandDispatcher().register(this, new WarzoneCommand(this), "warzone", "zone");
         game.getCommandDispatcher().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
         game.getCommandDispatcher().register(this, new SetZoneCommand(this), "setzone", "zoneset");
+        game.getCommandDispatcher().register(this, new ClearEntCommand(this), "clearent", "killall");
+        game.getCommandDispatcher().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
     }
 
     public Game getGame() {
@@ -103,8 +107,32 @@ public class WarPlugin {
         }
     }
 
+    public String deleteZone(String zoneName) {
+        try {
+            Warzone zone = zones.remove(zoneName);
+            config.deleteZone(zone.getName());
+            zone.close();
+            File trashDir = new File(dataDir, "trash");
+            if (!trashDir.exists() && !trashDir.mkdirs()) {
+                throw new RuntimeException("Failed to create trash folder on the server. Warzone only removed from config.");
+            }
+            File dataFile = zone.getDataFile();
+            File outputFile = new File(trashDir, dataFile.getName());
+            if (!dataFile.renameTo(outputFile)) {
+                throw new RuntimeException("Failed to remove zone data file for zone being removed: " + zoneName);
+            }
+            return outputFile.getPath();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public Map<String, Warzone> getZones() {
         return zones;
+    }
+
+    public ZoneValidator getValidator() {
+        return validator;
     }
 
     public Location<World> getSpongeLocation(WarLocation location) {

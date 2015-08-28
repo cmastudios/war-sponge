@@ -35,6 +35,10 @@ public class ZoneStorage implements AutoCloseable {
         return connection;
     }
 
+    public File getDataStore() {
+        return dataStore;
+    }
+
     /**
      * Check the database stored version information and perform upgrade tasks if necessary.
      *

@@ -39,8 +39,12 @@ public class WarLocation {
         return (int) Math.floor(z);
     }
 
+    public WarLocation getBlockLoc() {
+        return new WarLocation(getBlockX(), getBlockY(), getBlockZ(), world);
+    }
+
     @Override
     public String toString() {
-        return String.format("x: %d, y: %d, z: %d", (int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+        return String.format("x: %d, y: %d, z: %d", getBlockX(), getBlockY(), getBlockZ());
     }
 }

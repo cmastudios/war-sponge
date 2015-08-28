@@ -4,16 +4,14 @@ import com.tommytony.war.WarPlugin;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 
+import java.io.File;
 import java.sql.SQLException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Representation of a war zone area, blocks, and settings.
  * Each zone is to only have one instance of Warzone.class at any given time while the server is running.
  */
-public class Warzone {
-    private static Pattern zoneName = Pattern.compile("[./%]+");
+public class Warzone implements AutoCloseable {
     private final WarPlugin plugin;
     private final String name;
     private final ZoneStorage db;
@@ -51,19 +49,6 @@ public class Warzone {
         }
     }
 
-    /**
-     * Check if the specified name is valid for a zone.
-     * Specifically, characters that could be part of a file path or web URL.
-     * '.', '/', and '%' are invalid.
-     *
-     * @param name Potential zone name to check.
-     * @return true if the name can be used.
-     */
-    public static boolean zoneNameInvalid(String name) {
-        Matcher m = zoneName.matcher(name);
-        return m.find();
-    }
-
     public String getName() {
         return name;
     }
@@ -76,8 +61,24 @@ public class Warzone {
                 throw new RuntimeException("No teleport location found for zone " + name);
             }
         } catch (SQLException e) {
-            plugin.getLogger().error("Retrieving teleport", e);
-            throw new RuntimeException("Error in retrieving information from database");
+            throw new RuntimeException(e);
         }
+    }
+
+    public void setTeleport(WarLocation location) {
+        try {
+            db.setPosition("lobby", location);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public File getDataFile() {
+        return db.getDataStore();
+    }
+
+    @Override
+    public void close() throws Exception {
+        db.close();
     }
 }
