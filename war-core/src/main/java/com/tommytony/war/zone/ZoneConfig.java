@@ -72,4 +72,41 @@ public class ZoneConfig {
         }
     }
 
+    /**
+     * Set a value in the database, for an integer.
+     * @param setting Setting to change.
+     * @param value New value to add or replace.
+     * @throws SQLException
+     */
+    public void setInt(ZoneSetting setting, int value) throws SQLException {
+        boolean exists;
+        String sql = "INSERT INTO %s (value, option) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
+            stmt.setString(1, setting.name());
+            try (ResultSet result = stmt.executeQuery()) {
+                exists = result.next();
+            }
+        }
+        if (exists) {
+            sql = "UPDATE %s SET value = ? WHERE option = ?";
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(String.format(sql, table))) {
+            stmt.setInt(1, value);
+            stmt.setString(2, setting.name());
+            stmt.executeUpdate();
+        }
+    }
+
+    public Object getObject(ZoneSetting setting) throws SQLException {
+        if (setting.getDataType() == Integer.class) {
+            return this.getInt(setting);
+        }
+        return null;
+    }
+
+    public void setValue(ZoneSetting setting, String value) throws SQLException {
+        if (setting.getDataType() == Integer.class) {
+            setInt(setting, Integer.parseInt(value));
+        }
+    }
 }

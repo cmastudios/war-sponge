@@ -57,6 +57,7 @@ public class WarPlugin {
         game.getCommandDispatcher().register(this, new SetZoneCommand(this), "setzone", "zoneset");
         game.getCommandDispatcher().register(this, new ClearEntCommand(this), "clearent", "killall");
         game.getCommandDispatcher().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
+        game.getCommandDispatcher().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig");
 
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());

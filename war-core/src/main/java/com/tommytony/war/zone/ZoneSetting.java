@@ -13,7 +13,7 @@ public enum ZoneSetting {
     private final Object defaultValue;
     private final boolean perTeam;
 
-    private ZoneSetting(Class<?> dataType, Object defaultValue, boolean perTeam) {
+    ZoneSetting(Class<?> dataType, Object defaultValue, boolean perTeam) {
         this.dataType = dataType;
         this.defaultValue = defaultValue;
         this.perTeam = perTeam;
@@ -21,5 +21,9 @@ public enum ZoneSetting {
 
     public Object getDefaultValue() {
         return defaultValue;
+    }
+
+    public Class<?> getDataType() {
+        return dataType;
     }
 }

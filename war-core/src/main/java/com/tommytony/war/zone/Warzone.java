@@ -19,8 +19,9 @@ public class Warzone implements AutoCloseable {
     /**
      * Load or create a war zone from the war settings store.
      *
-     * @param plugin Instance of the plugin War.
-     * @param name   Name of the zone. Used to locate the zone data file.
+     * @param name Name of warzone
+     * @param dataDir Preferred folder to store data for War
+     * @param config Server-wide War plugin config
      */
     public Warzone(String name, File dataDir, WarConfig config) {
         this.name = name;
@@ -77,5 +78,9 @@ public class Warzone implements AutoCloseable {
     @Override
     public void close() throws Exception {
         db.close();
+    }
+
+    public ZoneConfig getConfig() {
+        return config;
     }
 }
