@@ -1,6 +1,6 @@
 package com.tommytony.war.zone;
 
-import com.tommytony.war.WarPlugin;
+import com.tommytony.war.WarConfig;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 
@@ -12,7 +12,6 @@ import java.sql.SQLException;
  * Each zone is to only have one instance of Warzone.class at any given time while the server is running.
  */
 public class Warzone implements AutoCloseable {
-    private final WarPlugin plugin;
     private final String name;
     private final ZoneStorage db;
     private final ZoneConfig config;
@@ -23,15 +22,13 @@ public class Warzone implements AutoCloseable {
      * @param plugin Instance of the plugin War.
      * @param name   Name of the zone. Used to locate the zone data file.
      */
-    public Warzone(WarPlugin plugin, String name) {
-        this.plugin = plugin;
+    public Warzone(String name, File dataDir, WarConfig config) {
         this.name = name;
         try {
-            this.db = new ZoneStorage(this, plugin);
-            this.config = new ZoneConfig(db.getConnection(), "settings", plugin.getConfig().getZoneDefaults());
+            this.db = new ZoneStorage(this, dataDir);
+            this.config = new ZoneConfig(db.getConnection(), "settings", config.getZoneDefaults());
         } catch (SQLException ex) {
-            plugin.getLogger().error("Failed to load zone database and settings", ex);
-            throw new RuntimeException("Can't create/load database for warzone " + name);
+            throw new RuntimeException(ex);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.tommytony.war.zone;
 
-import com.tommytony.war.WarPlugin;
 import com.tommytony.war.struct.WarLocation;
 
 import java.io.File;
@@ -12,7 +11,6 @@ import java.sql.*;
 public class ZoneStorage implements AutoCloseable {
     private static int DATABASE_VERSION = 1;
     private final Warzone zone;
-    private final WarPlugin plugin;
     private final Connection connection;
     private final File dataStore;
 
@@ -23,10 +21,9 @@ public class ZoneStorage implements AutoCloseable {
      * @param plugin The war plugin, for storage information and configuration.
      * @throws SQLException
      */
-    ZoneStorage(Warzone zone, WarPlugin plugin) throws SQLException {
+    ZoneStorage(Warzone zone, File dataDir) throws SQLException {
         this.zone = zone;
-        this.plugin = plugin;
-        dataStore = new File(plugin.getDataDir(), String.format("%s.warzone", zone.getName()));
+        dataStore = new File(dataDir, String.format("%s.warzone", zone.getName()));
         connection = DriverManager.getConnection("jdbc:sqlite:" + dataStore.getPath());
         this.upgradeDatabase();
     }

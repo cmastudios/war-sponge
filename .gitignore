@@ -1,8 +1,9 @@
 target/
-war.iml
+*.iml
 .project
 .classpath
 .workspace/
 .settings/
 .idea/
 dependency-reduced-pom.xml
+.DS_Store

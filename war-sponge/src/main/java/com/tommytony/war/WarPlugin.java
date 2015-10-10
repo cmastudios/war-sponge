@@ -60,11 +60,11 @@ public class WarPlugin {
 
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());
-        config = new WarConfig(this, new File(dataDir, "war.sl3"));
+        config = new WarConfig(new File(dataDir, "war.sl3"));
         validator = new ZoneValidator(config);
         for (String zoneName : config.getZones()) {
             logger.info("[War] Loading zone " + zoneName + "...");
-            Warzone zone = new Warzone(this, zoneName);
+            Warzone zone = new Warzone(zoneName, dataDir, config);
             zones.put(zoneName, zone);
         }
     }
@@ -95,7 +95,7 @@ public class WarPlugin {
     public Warzone createZone(String zoneName) {
         try {
             config.addZone(zoneName);
-            Warzone zone = new Warzone(this, zoneName);
+            Warzone zone = new Warzone(zoneName, dataDir, config);
             zones.put(zoneName, zone);
             return zone;
         } catch (SQLException e) {

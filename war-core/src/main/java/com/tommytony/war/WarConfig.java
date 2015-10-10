@@ -2,7 +2,6 @@ package com.tommytony.war;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.zone.ZoneConfig;
-import org.spongepowered.api.entity.living.player.Player;
 
 import java.io.Closeable;
 import java.io.File;
@@ -18,7 +17,6 @@ import java.util.UUID;
  * The main war configuration database.
  */
 public class WarConfig implements Closeable {
-    private final WarPlugin plugin;
     private final ZoneConfig zoneDefaults;
     /**
      * Database configuration descriptor.
@@ -32,8 +30,7 @@ public class WarConfig implements Closeable {
      * @throws FileNotFoundException
      * @throws SQLException
      */
-    public WarConfig(WarPlugin plugin, File file) throws FileNotFoundException, SQLException {
-        this.plugin = plugin;
+    public WarConfig(File file) throws FileNotFoundException, SQLException {
         conn = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS settings (option TEXT, value BLOB)");
@@ -123,15 +120,13 @@ public class WarConfig implements Closeable {
      * @return list of zone makers.
      * @throws SQLException
      */
-    public Collection<Player> getZoneMakers() throws SQLException {
-        ArrayList<Player> makers = new ArrayList<>();
+    public Collection<UUID> getZoneMakers() throws SQLException {
+        ArrayList<UUID> makers = new ArrayList<>();
         try (Statement stmt = conn.createStatement();
              ResultSet result = stmt.executeQuery("SELECT uuid FROM zonemakers")) {
             while (result.next()) {
                 UUID playerId = UUID.fromString(result.getString(1));
-                Optional<Player> player = plugin.getGame().getServer().getPlayer(playerId);
-                if (player.isPresent())
-                    makers.add(player.get());
+                makers.add(playerId);
             }
         }
         return ImmutableList.copyOf(makers);
