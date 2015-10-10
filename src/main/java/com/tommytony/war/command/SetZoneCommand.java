@@ -1,6 +1,5 @@
 package com.tommytony.war.command;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlayerState;
 import com.tommytony.war.WarPlugin;
@@ -8,7 +7,7 @@ import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneValidator;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.text.format.TextColors;
@@ -22,6 +21,7 @@ import org.spongepowered.api.world.World;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 
 public class SetZoneCommand implements CommandCallable {
     private final WarPlugin plugin;

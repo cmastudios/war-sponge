@@ -1,6 +1,5 @@
 package com.tommytony.war.command;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
 import org.spongepowered.api.text.Text;
@@ -12,6 +11,7 @@ import org.spongepowered.api.util.command.CommandSource;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 
 public class DeleteZoneCommand implements CommandCallable {
     private final WarPlugin plugin;

@@ -1,10 +1,9 @@
 package com.tommytony.war.command;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarConfig;
 import com.tommytony.war.WarPlugin;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.util.command.CommandCallable;
@@ -14,6 +13,7 @@ import org.spongepowered.api.util.command.CommandSource;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 public class WarConfigCommand implements CommandCallable {
 

@@ -1,9 +1,8 @@
 package com.tommytony.war;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.zone.ZoneConfig;
-import org.spongepowered.api.entity.player.Player;
+import org.spongepowered.api.entity.living.player.Player;
 
 import java.io.Closeable;
 import java.io.File;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 /**

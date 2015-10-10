@@ -1,6 +1,5 @@
 package com.tommytony.war.command;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
 import org.spongepowered.api.entity.Entity;
@@ -13,6 +12,7 @@ import org.spongepowered.api.util.command.CommandSource;
 import org.spongepowered.api.world.World;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ClearEntCommand implements CommandCallable {
     private final WarPlugin plugin;
