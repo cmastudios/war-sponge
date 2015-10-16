@@ -41,56 +41,56 @@ public class ZoneConfigCommand implements CommandCallable {
             source.sendMessage(Texts.of("Warzones: ", zones.toString()));
             StringBuilder properties = new StringBuilder();
             for (ZoneSetting setting : ZoneSetting.values()) {
-                properties.append(setting.name().toLowerCase()).append("<").append(setting.getDataType().getName());
+                properties.append(setting.name().toLowerCase()).append("<").append(setting.getDataType().getSimpleName());
                 properties.append("> (").append(setting.getDefaultValue().toString()).append(")\n");
             }
             source.sendMessage(Texts.of("Available properties:\n", properties.toString()));
             return CommandResult.empty();
         } else if (argv.length == 1) {
             String zoneName = argv[0];
-            Optional<Warzone> zone = plugin.getZone(zoneName);
-            if (!zone.isPresent()) {
+            Warzone zone = plugin.getZone(zoneName);
+            if (zone == null) {
                 source.sendMessage(Texts.of("Can't find warzone ", zoneName));
                 return CommandResult.empty();
             }
             StringBuilder properties = new StringBuilder();
             for (ZoneSetting setting : ZoneSetting.values()) {
-                properties.append(setting.name().toLowerCase()).append(" <").append(setting.getDataType().getName());
+                properties.append(setting.name().toLowerCase()).append(" <").append(setting.getDataType().getSimpleName());
                 try {
-                    properties.append("> (").append(zone.get().getConfig().getObject(setting).toString()).append(")\n");
+                    properties.append("> (").append(zone.getConfig().getObject(setting).toString()).append(")\n");
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
             }
-            source.sendMessage(Texts.of("Properties of warzone `", zone.get().getName(), "':\n", properties.toString()));
+            source.sendMessage(Texts.of("Properties of warzone `", zone.getName(), "':\n", properties.toString()));
             return CommandResult.success();
         } else if (argv.length == 2) {
             String zoneName = argv[0];
-            Optional<Warzone> zone = plugin.getZone(zoneName);
-            if (!zone.isPresent()) {
+            Warzone zone = plugin.getZone(zoneName);
+            if (zone == null) {
                 source.sendMessage(Texts.of("Can't find warzone ", zoneName));
                 return CommandResult.empty();
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             try {
-                source.sendMessage(Texts.of(setting.name().toLowerCase(), " <", setting.getDataType().getName(), "> = ",
-                        zone.get().getConfig().getObject(setting).toString()));
+                source.sendMessage(Texts.of(setting.name().toLowerCase(), " <", setting.getDataType().getSimpleName(), "> = ",
+                        zone.getConfig().getObject(setting).toString()));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
             return CommandResult.empty();
         } else if (argv.length == 3) {
             String zoneName = argv[0];
-            Optional<Warzone> zone = plugin.getZone(zoneName);
-            if (!zone.isPresent()) {
+            Warzone zone = plugin.getZone(zoneName);
+            if (zone == null) {
                 source.sendMessage(Texts.of("Can't find warzone ", zoneName));
                 return CommandResult.empty();
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             String value = argv[2];
             try {
-                zone.get().getConfig().setValue(setting, value);
-                source.sendMessage(Texts.of("Setting ", setting, " successfully set to ", value));
+                zone.getConfig().setValue(setting, value);
+                source.sendMessage(Texts.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -103,6 +103,32 @@ public class ZoneConfigCommand implements CommandCallable {
 
     @Override
     public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
+        String argv[] = arguments.trim().split(" ");
+        if (arguments.trim().isEmpty()) {
+            return ImmutableList.of();
+        } else if (argv.length == 1) {
+            ImmutableList.Builder<String> list = ImmutableList.builder();
+            // IntelliJ suggested this. I have no understanding of it but wow
+            plugin.getZones().values().stream().filter(zone -> zone.getName().toLowerCase().startsWith(argv[0].toLowerCase())).forEach(zone -> list.add(zone.getName()));
+            return list.build();
+        } else if (argv.length == 2) {
+            ImmutableList.Builder<String> list = ImmutableList.builder();
+            for (ZoneSetting setting : ZoneSetting.values()) {
+                list.add(setting.name().toLowerCase());
+            }
+            return list.build();
+        } else if (argv.length == 3) {
+            Warzone zone = plugin.getZone(argv[0]);
+            if (zone == null) {
+                return ImmutableList.of();
+            }
+            try {
+                ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
+                return ImmutableList.of(setting.getDefaultValue().toString());
+            } catch (IllegalArgumentException e) {
+                return ImmutableList.of();
+            }
+        }
         return ImmutableList.of();
     }
 

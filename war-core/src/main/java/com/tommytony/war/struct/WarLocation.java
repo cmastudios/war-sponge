@@ -47,4 +47,12 @@ public class WarLocation {
     public String toString() {
         return String.format("x: %d, y: %d, z: %d", getBlockX(), getBlockY(), getBlockZ());
     }
+
+    public WarLocation add(WarLocation two) {
+        return new WarLocation(this.x + two.x, this.y + two.y, this.z + two.z, this.world);
+    }
+
+    public WarLocation sub(WarLocation two) {
+        return new WarLocation(this.x - two.x, this.y - two.y, this.z - two.z, this.world);
+    }
 }

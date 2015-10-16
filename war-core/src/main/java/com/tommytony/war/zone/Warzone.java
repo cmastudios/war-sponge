@@ -1,5 +1,6 @@
 package com.tommytony.war.zone;
 
+import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarConfig;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -15,19 +16,20 @@ public class Warzone implements AutoCloseable {
     private final String name;
     private final ZoneStorage db;
     private final ZoneConfig config;
+    private final ServerAPI plugin;
 
     /**
      * Load or create a war zone from the war settings store.
      *
      * @param name Name of warzone
-     * @param dataDir Preferred folder to store data for War
-     * @param config Server-wide War plugin config
+     * @param plugin War plugin
      */
-    public Warzone(String name, File dataDir, WarConfig config) {
+    public Warzone(String name, ServerAPI plugin) {
         this.name = name;
+        this.plugin = plugin;
         try {
-            this.db = new ZoneStorage(this, dataDir);
-            this.config = new ZoneConfig(db.getConnection(), "settings", config.getZoneDefaults());
+            this.db = new ZoneStorage(this, plugin);
+            this.config = new ZoneConfig(db.getConnection(), "settings", plugin.getConfig().getZoneDefaults());
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }

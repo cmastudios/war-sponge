@@ -2,11 +2,15 @@ package com.tommytony.war;
 
 import com.google.inject.Inject;
 import com.tommytony.war.command.*;
+import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneValidator;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
@@ -15,6 +19,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -24,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Plugin(id = "war", name = "War", version = "2.0-SNAPSHOT")
-public class WarPlugin {
+public class WarPlugin implements ServerAPI {
     private Game game;
 
     @Inject
@@ -37,6 +42,7 @@ public class WarPlugin {
     private WarConfig config;
     private Map<String, Warzone> zones;
     private ZoneValidator validator;
+    private Yaml yaml;
 
     @Listener
     public void onConstruction(GameConstructionEvent event) throws InstantiationException {
@@ -47,6 +53,7 @@ public class WarPlugin {
             throw new InstantiationException("Failed to load SQLite database");
         }
         zones = new HashMap<>();
+        yaml = new Yaml();
     }
 
     @Listener
@@ -65,7 +72,7 @@ public class WarPlugin {
         validator = new ZoneValidator(config);
         for (String zoneName : config.getZones()) {
             logger.info("[War] Loading zone " + zoneName + "...");
-            Warzone zone = new Warzone(zoneName, dataDir, config);
+            Warzone zone = new Warzone(zoneName, this);
             zones.put(zoneName, zone);
         }
     }
@@ -78,6 +85,7 @@ public class WarPlugin {
         return logger;
     }
 
+    @Override
     public File getDataDir() {
         return dataDir;
     }
@@ -86,17 +94,17 @@ public class WarPlugin {
         return config;
     }
 
-    public Optional<Warzone> getZone(String zoneName) {
+    public Warzone getZone(String zoneName) {
         if (zones.containsKey(zoneName)) {
-            return Optional.of(zones.get(zoneName));
+            return zones.get(zoneName);
         }
-        return Optional.empty();
+        return null;
     }
 
     public Warzone createZone(String zoneName) {
         try {
             config.addZone(zoneName);
-            Warzone zone = new Warzone(zoneName, dataDir, config);
+            Warzone zone = new Warzone(zoneName, this);
             zones.put(zoneName, zone);
             return zone;
         } catch (SQLException e) {
@@ -146,5 +154,42 @@ public class WarPlugin {
 
     public WarPlayerState getState(Player player) {
         return WarPlayerState.getState(player.getUniqueId());
+    }
+
+    @Override
+    public WarBlock getBlock(WarLocation location) {
+        String name, serialized;
+        Map<String, Object> data = new HashMap<>();
+        Location<World> sloc = getSpongeLocation(location);
+        Map<DataQuery, Object> values = sloc.getBlock().toContainer().getValues(true);
+        for (DataQuery q : values.keySet()) {
+            data.put(q.asString('.'), values.get(q));
+        }
+        name = sloc.getBlock().getType().getName();
+        // TODO test serialized interop with Bukkit
+        serialized = yaml.dump(data);
+        return new WarBlock(name, data, serialized);
+    }
+
+    @Override
+    public void setBlock(WarLocation location, WarBlock block) {
+        Location<World> sloc = getSpongeLocation(location);
+        Optional<BlockType> type = game.getRegistry().<BlockType>getType(BlockType.class, block.getBlockName());
+        if (!type.isPresent()) {
+            throw new IllegalStateException("Failed to get block type for block " + block.getBlockName());
+        }
+        if (block.getData() == null && !block.getSerialized().isEmpty()) {
+            Object load = yaml.load(block.getSerialized());
+            if (!(load instanceof Map)) {
+                throw new IllegalStateException("Serialized data is not valid for block\n" + block.getSerialized());
+            }
+            block.setData((Map<String, Object>) load);
+        }
+        DataContainer dataContainer = sloc.toContainer();
+        for (String s : block.getData().keySet()) {
+            dataContainer.set(DataQuery.of('.', s), block.getData().get(s));
+        }
+        sloc.setBlockType(type.get(), false);
+        sloc.setRawData(dataContainer);
     }
 }

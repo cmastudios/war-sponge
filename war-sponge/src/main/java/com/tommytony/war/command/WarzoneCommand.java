@@ -49,12 +49,12 @@ public class WarzoneCommand implements CommandCallable {
             return CommandResult.success();
         }
         String zoneName = argv[0];
-        Optional<Warzone> zone = plugin.getZone(zoneName);
-        if (!zone.isPresent()) {
+        Warzone zone = plugin.getZone(zoneName);
+        if (zone == null) {
             return CommandResult.empty();
         }
         Player player = (Player) commandSource;
-        player.setLocation(plugin.getSpongeLocation(zone.get().getTeleport()));
+        player.setLocation(plugin.getSpongeLocation(zone.getTeleport()));
 
         return CommandResult.success();
     }

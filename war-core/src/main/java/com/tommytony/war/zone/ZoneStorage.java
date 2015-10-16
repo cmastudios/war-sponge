@@ -1,9 +1,12 @@
 package com.tommytony.war.zone;
 
+import com.tommytony.war.ServerAPI;
 import com.tommytony.war.struct.WarLocation;
 
 import java.io.File;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manages the war zone database file, which contains all the data for the war zone.
@@ -13,6 +16,9 @@ public class ZoneStorage implements AutoCloseable {
     private final Warzone zone;
     private final Connection connection;
     private final File dataStore;
+    private final ServerAPI plugin;
+    private Map<Integer, String> blockIds;
+    private Map<String, WarLocation> positionCache;
 
     /**
      * Initiates a database for a new or existing database.
@@ -21,9 +27,11 @@ public class ZoneStorage implements AutoCloseable {
      * @param plugin The war plugin, for storage information and configuration.
      * @throws SQLException
      */
-    ZoneStorage(Warzone zone, File dataDir) throws SQLException {
+    ZoneStorage(Warzone zone, ServerAPI plugin) throws SQLException {
         this.zone = zone;
-        dataStore = new File(dataDir, String.format("%s.warzone", zone.getName()));
+        this.plugin = plugin;
+        this.positionCache = new HashMap<>();
+        dataStore = new File(plugin.getDataDir(), String.format("%s.warzone", zone.getName()));
         connection = DriverManager.getConnection("jdbc:sqlite:" + dataStore.getPath());
         this.upgradeDatabase();
     }
@@ -34,6 +42,10 @@ public class ZoneStorage implements AutoCloseable {
 
     public File getDataStore() {
         return dataStore;
+    }
+
+    public void clearCache() {
+        positionCache.clear();
     }
 
     /**
@@ -57,6 +69,8 @@ public class ZoneStorage implements AutoCloseable {
             // brand new database file
             Statement stmt = connection.createStatement();
             stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, world TEXT)");
+            stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER PRIMARY KEY, name TEXT) WITHOUT ROWID");
+            stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, data BLOB)");
             stmt.executeUpdate(String.format("PRAGMA user_version = %d", DATABASE_VERSION));
         } else if (version < DATABASE_VERSION) {
             // upgrade
@@ -69,6 +83,16 @@ public class ZoneStorage implements AutoCloseable {
         }
     }
 
+    private WarLocation dbToWorld(WarLocation location) throws SQLException {
+        WarLocation relative = this.getPosition("position1");
+        return relative.add(location);
+    }
+
+    private WarLocation worldToDb(WarLocation location) throws SQLException {
+        WarLocation relative = this.getPosition("position1");
+        return relative.sub(location);
+    }
+
     /**
      * Look up a position in the coordinates table.
      *
@@ -77,15 +101,24 @@ public class ZoneStorage implements AutoCloseable {
      * @throws SQLException
      */
     public WarLocation getPosition(String name) throws SQLException {
+        if (positionCache.containsKey(name)) {
+            return positionCache.get(name);
+        }
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT x, y, z, world FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
-                    return new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"), resultSet.getString("world"));
+                    WarLocation warLocation = new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"), resultSet.getString("world"));
+                    if (!name.equals("position1")) {
+                        warLocation = dbToWorld(warLocation);
+                    }
+                    positionCache.put(name, warLocation);
+                    return warLocation;
                 }
             }
         }
+        positionCache.put(name, null);
         return null;
     }
 
@@ -107,6 +140,9 @@ public class ZoneStorage implements AutoCloseable {
         } else {
             sql = "INSERT INTO coordinates (x, y, z, world, name) VALUES (?, ?, ?, ?, ?)";
         }
+        if (!name.equals("position1")) {
+            location = worldToDb(location);
+        }
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setDouble(1, location.getX());
             stmt.setDouble(2, location.getY());
@@ -115,6 +151,7 @@ public class ZoneStorage implements AutoCloseable {
             stmt.setString(5, name);
             stmt.execute();
         }
+        positionCache.put(name, location);
     }
 
     /**
