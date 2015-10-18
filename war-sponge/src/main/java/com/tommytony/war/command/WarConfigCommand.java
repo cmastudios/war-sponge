@@ -44,17 +44,7 @@ public class WarConfigCommand implements CommandCallable {
 
     @Override
     public boolean testPermission(CommandSource source) {
-        try {
-            if (source instanceof Player && plugin.getConfig().getZoneMakers().contains(source)) {
-                return true;
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().error("Loading zone makers for testing permission", e);
-        }
-        if (source.hasPermission("war.config")) {
-            return true;
-        }
-        return false;
+        return source.hasPermission("war.config");
     }
 
     @Override

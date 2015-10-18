@@ -49,6 +49,14 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    public WarCuboid getCuboid() {
+        try {
+            return new WarCuboid(db.getPosition("position1"), db.getPosition("position2"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public String getName() {
         return name;
     }
@@ -75,6 +83,14 @@ public class Warzone implements AutoCloseable {
 
     public File getDataFile() {
         return db.getDataStore();
+    }
+
+    public void save() {
+        try {
+            db.saveBlocks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

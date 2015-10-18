@@ -1,8 +1,10 @@
 package com.tommytony.war.zone;
 
 import com.tommytony.war.ServerAPI;
+import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 
+import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.sql.*;
 import java.util.HashMap;
@@ -17,7 +19,6 @@ public class ZoneStorage implements AutoCloseable {
     private final Connection connection;
     private final File dataStore;
     private final ServerAPI plugin;
-    private Map<Integer, String> blockIds;
     private Map<String, WarLocation> positionCache;
 
     /**
@@ -152,6 +153,70 @@ public class ZoneStorage implements AutoCloseable {
             stmt.execute();
         }
         positionCache.put(name, location);
+    }
+
+    public void loadBlocks() throws SQLException {
+        Map<Integer, String> blockIds = new HashMap<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT id, name FROM block_ids"
+        )) {
+            try (ResultSet result = stmt.executeQuery()) {
+                while (result.next()) {
+                    blockIds.put(result.getInt("id"), result.getString("name"));
+                }
+            }
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT x, y, z, id, data FROM blocks"
+        )) {
+            try (ResultSet result = stmt.executeQuery()) {
+                while (result.next()) {
+                    String name = blockIds.get(result.getInt("id"));
+                    String serialized = result.getString("data");
+                    WarLocation loc = new WarLocation(result.getInt("x"), result.getInt("y"), result.getInt("z"),
+                            this.getPosition("position1").getWorld());
+                    loc = dbToWorld(loc);
+                    WarBlock block = new WarBlock(name, null, serialized);
+                    plugin.setBlock(loc, block);
+                }
+            }
+        }
+    }
+
+    public void saveBlocks() throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
+            stmt.executeUpdate("DELETE FROM block_ids");
+            stmt.executeUpdate("DELETE FROM blocks");
+        }
+        Map<String, Integer> blockIds = new HashMap<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO block_ids (id, name) VALUES (?, ?)"
+        )) {
+            int i = 0;
+            for (WarLocation loc : zone.getCuboid()) {
+                WarBlock block = plugin.getBlock(loc);
+                if (!blockIds.containsKey(block.getBlockName())) {
+                    stmt.setInt(1, i);
+                    stmt.setString(2, block.getBlockName());
+                    stmt.addBatch();
+                    blockIds.put(block.getBlockName(), i++);
+                }
+            }
+            stmt.executeBatch();
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO blocks (x, y, z, id, data) VALUES (?, ?, ?, ?, ?)")) {
+            for (WarLocation loc : zone.getCuboid()) {
+                WarBlock block = plugin.getBlock(loc);
+                stmt.setInt(1, worldToDb(loc).getBlockX());
+                stmt.setInt(2, worldToDb(loc).getBlockY());
+                stmt.setInt(3, worldToDb(loc).getBlockZ());
+                stmt.setInt(4, blockIds.get(block.getBlockName()));
+                stmt.setString(5, block.getSerialized());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
     }
 
     /**

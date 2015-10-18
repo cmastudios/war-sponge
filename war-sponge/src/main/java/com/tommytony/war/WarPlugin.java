@@ -65,6 +65,7 @@ public class WarPlugin implements ServerAPI {
         game.getCommandDispatcher().register(this, new ClearEntCommand(this), "clearent", "killall");
         game.getCommandDispatcher().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
         game.getCommandDispatcher().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig");
+        game.getCommandDispatcher().register(this, new SaveZoneCommand(this), "savezone", "zonesave");
 
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());
@@ -185,11 +186,13 @@ public class WarPlugin implements ServerAPI {
             }
             block.setData((Map<String, Object>) load);
         }
-        DataContainer dataContainer = sloc.toContainer();
-        for (String s : block.getData().keySet()) {
-            dataContainer.set(DataQuery.of('.', s), block.getData().get(s));
+        if (block.getData() != null) {
+            DataContainer dataContainer = sloc.toContainer();
+            for (String s : block.getData().keySet()) {
+                dataContainer.set(DataQuery.of('.', s), block.getData().get(s));
+            }
+            sloc.setRawData(dataContainer);
         }
         sloc.setBlockType(type.get(), false);
-        sloc.setRawData(dataContainer);
     }
 }

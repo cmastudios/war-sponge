@@ -41,14 +41,13 @@ public class SetZoneCommand implements CommandCallable {
         }
         String[] args = s.trim().split(" ");
         if (args.length == 0 || args[0].length() == 0) {
-            return CommandResult.empty();
+            throw new CommandException(Texts.of("Insufficient arguments."));
         }
         if (plugin.getState(player).isCreatingZone() && (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2"))) {
             WarPlayerState.ZoneCreationState state = plugin.getState(player).getZoneCreationState();
             final Optional<BlockRayHit<World>> block = BlockRay.from(player).filter(BlockRay.<World>onlyAirFilter()).end();
             if (!block.isPresent()) {
-                commandSource.sendMessage(Texts.of("You are not pointing at a block."));
-                return CommandResult.empty();
+                throw new CommandException(Texts.of("You are not pointing at a block."));
             }
             if (args[0].equalsIgnoreCase("c1")) {
                 state.setPosition1(plugin.getWarLocation(block.get().getLocation()));
@@ -56,15 +55,13 @@ public class SetZoneCommand implements CommandCallable {
                 return CommandResult.success();
             } else if (args[0].equalsIgnoreCase("c2")) {
                 if (!state.isPosition1Set()) {
-                    commandSource.sendMessage(Texts.of("Please place corner 1 of the zone first."));
-                    return CommandResult.success();
+                    throw new CommandException(Texts.of("Please place corner 1 of the zone before placing corner 2."));
                 }
                 WarLocation pos2 = plugin.getWarLocation(block.get().getLocation());
                 WarCuboid cuboid = new WarCuboid(state.getPosition1(), pos2);
                 if (plugin.getValidator().validateDimensions(cuboid) == ZoneValidator.ValidationStatus.INVALID) {
-                    commandSource.sendMessage(Texts.of(TextColors.RED, MessageFormat.format("Failed to create warzone {0} with dimensions {1}. Make your zone larger/smaller by placing your second corner somewhere else.",
+                    throw new CommandException(Texts.of(TextColors.RED, MessageFormat.format("Failed to create warzone {0} with dimensions {1}. Make your zone larger/smaller by placing your second corner somewhere else.",
                             state.getZoneName(), cuboid.toString())));
-                    return CommandResult.empty();
                 }
                 commandSource.sendMessage(Texts.of(MessageFormat.format("Set position 2 of warzone {0} to {1}.", state.getZoneName(), pos2.toString())));
                 Warzone zone = plugin.createZone(state.getZoneName());
@@ -76,12 +73,10 @@ public class SetZoneCommand implements CommandCallable {
             }
         }
         if (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2")) {
-            commandSource.sendMessage(Texts.of("Create a warzone using the command `/setzone <name>' first."));
-            return CommandResult.empty();
+            throw new CommandException(Texts.of("Create a new warzone before setting the corners."));
         }
         if (plugin.getValidator().validateName(args[0]) == ZoneValidator.ValidationStatus.INVALID) {
-            commandSource.sendMessage(Texts.of(MessageFormat.format("Name `{0}'' is invalid for a warzone.", args[0])));
-            return CommandResult.empty();
+            throw new CommandException(Texts.of(MessageFormat.format("Name `{0}'' is invalid for a warzone.", args[0])));
         }
         plugin.getState(player).setZoneCreationState(new WarPlayerState.ZoneCreationState(args[0]));
         commandSource.sendMessage(Texts.of(MessageFormat.format("You are now creating warzone {0}. Type `/setzone c1'' to place the first corner based on the block under your cursor.", args[0])));
@@ -111,6 +106,6 @@ public class SetZoneCommand implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource commandSource) {
-        return Texts.of("<name>");
+        return Texts.of("<name / c1 / c2>");
     }
 }

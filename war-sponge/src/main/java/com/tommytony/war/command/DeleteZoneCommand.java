@@ -24,7 +24,7 @@ public class DeleteZoneCommand implements CommandCallable {
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] args = arguments.trim().split(" ");
         if (args.length == 0 || args[0].length() == 0) {
-            throw new CommandException(Texts.of("Insufficient arguments. Usage: ", getUsage(source)));
+            throw new CommandException(Texts.of("Insufficient arguments."));
         }
         String zone = args[0].trim();
         if (!plugin.getZones().containsKey(zone)) {

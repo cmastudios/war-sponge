@@ -1,7 +1,11 @@
 package com.tommytony.war.struct;
 
-public class WarCuboid {
+import java.util.Iterator;
+import java.util.List;
+
+public class WarCuboid implements Iterable<WarLocation> {
     private WarLocation corner1, corner2;
+    private List<WarLocation> blocks;
 
     public WarCuboid(WarLocation corner1, WarLocation corner2) {
         this.corner1 = corner1;
@@ -47,5 +51,51 @@ public class WarCuboid {
     @Override
     public String toString() {
         return String.format("%dx%dx%d", (int) Math.floor(getSizeX()), (int) Math.floor(getSizeY()), (int) Math.floor(getSizeZ()));
+    }
+
+    @Override
+    public Iterator<WarLocation> iterator() {
+        return new WarCuboidIterator(this);
+    }
+
+    public class WarCuboidIterator implements Iterator<WarLocation> {
+        private final WarCuboid cuboid;
+        private int i;
+
+        public WarCuboidIterator(WarCuboid cuboid) {
+            this.cuboid = cuboid;
+            i = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            int li = 0;
+            for (int x = cuboid.getMinBlock().getBlockX(); x < cuboid.getMaxBlock().getBlockX(); x++) {
+                for (int y = cuboid.getMinBlock().getBlockY(); y < cuboid.getMaxBlock().getBlockY(); y++) {
+                    for (int z = cuboid.getMinBlock().getBlockZ(); z < cuboid.getMaxBlock().getBlockZ(); z++) {
+                        if (li++ == i) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public WarLocation next() {
+            int li = 0;
+            for (int x = cuboid.getMinBlock().getBlockX(); x < cuboid.getMaxBlock().getBlockX(); x++) {
+                for (int y = cuboid.getMinBlock().getBlockY(); y < cuboid.getMaxBlock().getBlockY(); y++) {
+                    for (int z = cuboid.getMinBlock().getBlockZ(); z < cuboid.getMaxBlock().getBlockZ(); z++) {
+                        if (li++ == i) {
+                            i++;
+                            return new WarLocation(x, y, z, cuboid.getMinBlock().getWorld());
+                        }
+                    }
+                }
+            }
+            throw new IllegalStateException("Iterator out");
+        }
     }
 }

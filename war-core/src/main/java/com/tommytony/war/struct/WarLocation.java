@@ -55,4 +55,32 @@ public class WarLocation {
     public WarLocation sub(WarLocation two) {
         return new WarLocation(this.x - two.x, this.y - two.y, this.z - two.z, this.world);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        WarLocation that = (WarLocation) o;
+
+        if (Double.compare(that.x, x) != 0) return false;
+        if (Double.compare(that.y, y) != 0) return false;
+        if (Double.compare(that.z, z) != 0) return false;
+        return world.equals(that.world);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        temp = Double.doubleToLongBits(x);
+        result = (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(y);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        temp = Double.doubleToLongBits(z);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = 31 * result + world.hashCode();
+        return result;
+    }
 }
