@@ -9,6 +9,7 @@ import com.tommytony.war.zone.ZoneValidator;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.data.DataQuery;
 import org.spongepowered.api.entity.living.player.Player;
@@ -16,7 +17,6 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.service.config.DefaultConfig;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.yaml.snakeyaml.Yaml;
@@ -30,6 +30,7 @@ import java.util.Optional;
 
 @Plugin(id = "war", name = "War", version = "2.0-SNAPSHOT")
 public class WarPlugin implements ServerAPI {
+    @Inject
     private Game game;
 
     @Inject
@@ -46,7 +47,6 @@ public class WarPlugin implements ServerAPI {
 
     @Listener
     public void onConstruction(GameConstructionEvent event) throws InstantiationException {
-        game = event.getGame();
         try {
             Class.forName("com.tommytony.war.sqlite.JDBC").newInstance();
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -59,13 +59,12 @@ public class WarPlugin implements ServerAPI {
     @Listener
     public void onServerStarted(GameStartedServerEvent event) throws FileNotFoundException, SQLException {
         // register commands
-        game.getCommandDispatcher().register(this, new WarzoneCommand(this), "warzone", "zone");
-        game.getCommandDispatcher().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
-        game.getCommandDispatcher().register(this, new SetZoneCommand(this), "setzone", "zoneset");
-        game.getCommandDispatcher().register(this, new ClearEntCommand(this), "clearent", "killall");
-        game.getCommandDispatcher().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
-        game.getCommandDispatcher().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig");
-        game.getCommandDispatcher().register(this, new SaveZoneCommand(this), "savezone", "zonesave");
+        game.getCommandManager().register(this, new WarzoneCommand(this), "warzone", "zone");
+        game.getCommandManager().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
+        game.getCommandManager().register(this, new SetZoneCommand(this), "setzone", "zoneset");
+        game.getCommandManager().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
+        game.getCommandManager().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig");
+        game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave");
 
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());
