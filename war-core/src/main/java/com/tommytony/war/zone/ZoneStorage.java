@@ -4,7 +4,6 @@ import com.tommytony.war.ServerAPI;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 
-import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.sql.*;
 import java.text.DecimalFormat;
@@ -172,7 +171,7 @@ public class ZoneStorage implements AutoCloseable {
                     WarLocation loc = new WarLocation(result.getInt("x"), result.getInt("y"), result.getInt("z"),
                             this.getPosition("position1").getWorld());
                     loc = dbToWorld(loc);
-                    WarBlock block = new WarBlock(name, null, serialized);
+                    WarBlock block = new WarBlock(name, null, serialized, (short) 0);
                     plugin.setBlock(loc, block);
                 }
             }
@@ -194,7 +193,7 @@ public class ZoneStorage implements AutoCloseable {
                 "INSERT INTO blocks (x, y, z, id, data) VALUES (?, ?, ?, ?, ?)"
         )) {
             for (WarLocation loc : zone.getCuboid()) {
-                WarBlock block = plugin.getBlock(loc, true);
+                WarBlock block = plugin.getBlock(loc, false);
                 if (!blockIds.containsKey(block.getBlockName())) {
                     blockIds.put(block.getBlockName(), i++);
                 }

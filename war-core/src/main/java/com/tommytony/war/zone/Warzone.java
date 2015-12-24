@@ -2,6 +2,7 @@ package com.tommytony.war.zone;
 
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarConfig;
+import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 
@@ -96,6 +97,7 @@ public class Warzone implements AutoCloseable {
 
     public void reset() {
         plugin.logInfo("Reloading zone " + this.getName() + "...");
+        plugin.removeEntity(this.getCuboid(), WarEntity.ITEM);
         try {
             db.loadBlocks();
         } catch (SQLException e) {

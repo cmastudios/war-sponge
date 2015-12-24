@@ -6,11 +6,13 @@ public class WarBlock {
     private String blockName;
     private Map<String, Object> data;
     private String serialized;
+    private short meta;
 
-    public WarBlock(String blockName, Map<String, Object> data, String serialized) {
+    public WarBlock(String blockName, Map<String, Object> data, String serialized, short meta) {
         this.blockName = blockName;
         this.data = data;
         this.serialized = serialized;
+        this.meta = meta;
     }
 
     public String getBlockName() {
@@ -35,5 +37,13 @@ public class WarBlock {
 
     public void setSerialized(String serialized) {
         this.serialized = serialized;
+    }
+
+    public short getMeta() {
+        return meta;
+    }
+
+    public void setMeta(short meta) {
+        this.meta = meta;
     }
 }

@@ -12,6 +12,10 @@ public class WarCuboid implements Iterable<WarLocation> {
         this.corner2 = corner2;
     }
 
+    public static WarCuboid entireWorld(String world) {
+        return new WarCuboid(new WarLocation(-3000000, 0, -3000000, world), new WarLocation(3000000, 255, 3000000, world));
+    }
+
     public WarLocation getCorner1() {
         return corner1;
     }
@@ -46,6 +50,12 @@ public class WarCuboid implements Iterable<WarLocation> {
 
     public double getSize() {
         return getSizeX() * getSizeY() * getSizeZ();
+    }
+
+    public boolean contains(WarLocation location) {
+        return location.getX() >= getMinBlock().getX() && location.getX() <= getMaxBlock().getX()
+                && location.getY() >= getMinBlock().getY() && location.getY() <= getMaxBlock().getY()
+                && location.getZ() >= getMinBlock().getZ() && location.getZ() <= getMaxBlock().getZ();
     }
 
     @Override
