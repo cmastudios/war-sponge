@@ -19,7 +19,6 @@ public class ZoneStorage implements AutoCloseable {
     private final Connection connection;
     private final File dataStore;
     private final ServerAPI plugin;
-    private Map<String, WarLocation> positionCache;
 
     /**
      * Initiates a database for a new or existing database.
@@ -31,7 +30,6 @@ public class ZoneStorage implements AutoCloseable {
     ZoneStorage(Warzone zone, ServerAPI plugin) throws SQLException {
         this.zone = zone;
         this.plugin = plugin;
-        this.positionCache = new HashMap<>();
         dataStore = new File(plugin.getDataDir(), String.format("%s.warzone", zone.getName()));
         connection = DriverManager.getConnection("jdbc:sqlite:" + dataStore.getPath());
         this.upgradeDatabase();
@@ -43,10 +41,6 @@ public class ZoneStorage implements AutoCloseable {
 
     public File getDataStore() {
         return dataStore;
-    }
-
-    public void clearCache() {
-        positionCache.clear();
     }
 
     /**
@@ -84,14 +78,14 @@ public class ZoneStorage implements AutoCloseable {
         }
     }
 
-    private WarLocation dbToWorld(WarLocation location) throws SQLException {
-        WarLocation relative = this.getPosition("position1");
-        return relative.add(location);
+    WarLocation dbToWorld(WarLocation location) throws SQLException {
+        WarLocation position1 = this.getPosition("position1");
+        return position1.add(location);
     }
 
-    private WarLocation worldToDb(WarLocation location) throws SQLException {
-        WarLocation relative = this.getPosition("position1");
-        return relative.sub(location);
+    WarLocation worldToDb(WarLocation location) throws SQLException {
+        WarLocation position1 = this.getPosition("position1");
+        return location.sub(position1);
     }
 
     /**
@@ -102,9 +96,6 @@ public class ZoneStorage implements AutoCloseable {
      * @throws SQLException
      */
     public WarLocation getPosition(String name) throws SQLException {
-        if (positionCache.containsKey(name)) {
-            return positionCache.get(name);
-        }
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT x, y, z, world FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
@@ -114,12 +105,10 @@ public class ZoneStorage implements AutoCloseable {
                     if (!name.equals("position1")) {
                         warLocation = dbToWorld(warLocation);
                     }
-                    positionCache.put(name, warLocation);
                     return warLocation;
                 }
             }
         }
-        positionCache.put(name, null);
         return null;
     }
 
@@ -152,7 +141,6 @@ public class ZoneStorage implements AutoCloseable {
             stmt.setString(5, name);
             stmt.execute();
         }
-        positionCache.put(name, location);
     }
 
     public void loadBlocks() throws SQLException {

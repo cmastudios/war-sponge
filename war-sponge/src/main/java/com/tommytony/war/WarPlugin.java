@@ -174,7 +174,7 @@ public class WarPlugin implements ServerAPI {
     @Override
     public void setBlock(WarLocation location, WarBlock block) {
         Location<World> sloc = getSpongeLocation(location);
-        Optional<BlockType> type = game.getRegistry().<BlockType>getType(BlockType.class, block.getBlockName());
+        Optional<BlockType> type = game.getRegistry().getType(BlockType.class, block.getBlockName());
         if (!type.isPresent()) {
             throw new IllegalStateException("Failed to get block type for block " + block.getBlockName());
         }
