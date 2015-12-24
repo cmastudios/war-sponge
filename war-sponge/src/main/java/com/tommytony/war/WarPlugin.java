@@ -55,6 +55,7 @@ public class WarPlugin implements ServerAPI {
         }
         zones = new HashMap<>();
         yaml = new Yaml();
+        dataDir = dataDir.getParentFile();
     }
 
     @Listener
@@ -63,9 +64,10 @@ public class WarPlugin implements ServerAPI {
         game.getCommandManager().register(this, new WarzoneCommand(this), "warzone", "zone");
         game.getCommandManager().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
         game.getCommandManager().register(this, new SetZoneCommand(this), "setzone", "zoneset");
-        game.getCommandManager().register(this, new DeleteZoneCommand(this), "delzone", "rmzone");
-        game.getCommandManager().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig");
-        game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave");
+        game.getCommandManager().register(this, new DeleteZoneCommand(this), "delzone", "rmzone", "deletezone");
+        game.getCommandManager().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig", "zc");
+        game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave", "zs");
+        game.getCommandManager().register(this, new ResetZoneCommand(this), "resetzone", "reloadzone", "zr");
 
         if (!dataDir.exists() && !dataDir.mkdirs())
             throw new FileNotFoundException("Failed to make War data folder at " + dataDir.getPath());

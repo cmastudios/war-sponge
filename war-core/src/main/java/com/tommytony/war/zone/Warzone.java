@@ -86,8 +86,18 @@ public class Warzone implements AutoCloseable {
     }
 
     public void save() {
+        plugin.logInfo("Saving zone " + this.getName() + "...");
         try {
             db.saveBlocks();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void reset() {
+        plugin.logInfo("Reloading zone " + this.getName() + "...");
+        try {
+            db.loadBlocks();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
