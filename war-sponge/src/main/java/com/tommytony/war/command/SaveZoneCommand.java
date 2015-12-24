@@ -46,6 +46,16 @@ public class SaveZoneCommand implements CommandCallable {
                 plugin.setBlock(loc, new WarBlock("minecraft:glass", null, ""));
             }
         }
+        if (argv.length == 2 && argv[1].equals("C$")) {
+            String zoneName = argv[0];
+            Warzone zone = plugin.getZone(zoneName);
+            if (zone == null) {
+                throw new CommandException(Texts.of(String.format("Can't find warzone %s", zoneName)));
+            }
+            for (WarLocation loc : zone.getCuboid()) {
+                plugin.setBlock(loc, new WarBlock("minecraft:air", null, ""));
+            }
+        }
         throw new CommandException(Texts.of("Insufficient arguments."));
     }
 

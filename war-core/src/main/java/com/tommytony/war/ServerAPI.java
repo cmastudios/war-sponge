@@ -6,8 +6,9 @@ import com.tommytony.war.struct.WarLocation;
 import java.io.File;
 
 public interface ServerAPI {
-    WarBlock getBlock(WarLocation location);
+    WarBlock getBlock(WarLocation location, boolean cheap);
     void setBlock(WarLocation location, WarBlock block);
     File getDataDir();
     WarConfig getConfig();
+    void logInfo(String message);
 }

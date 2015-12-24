@@ -7,6 +7,7 @@ import com.tommytony.war.struct.WarLocation;
 import javax.swing.plaf.nimbus.State;
 import java.io.File;
 import java.sql.*;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ public class ZoneStorage implements AutoCloseable {
     private final Connection connection;
     private final File dataStore;
     private final ServerAPI plugin;
+    private final Map<String, WarLocation> positionCache;
 
     /**
      * Initiates a database for a new or existing database.
@@ -32,6 +34,7 @@ public class ZoneStorage implements AutoCloseable {
         this.plugin = plugin;
         dataStore = new File(plugin.getDataDir(), String.format("%s.warzone", zone.getName()));
         connection = DriverManager.getConnection("jdbc:sqlite:" + dataStore.getPath());
+        positionCache = new HashMap<>();
         this.upgradeDatabase();
     }
 
@@ -96,6 +99,9 @@ public class ZoneStorage implements AutoCloseable {
      * @throws SQLException
      */
     public WarLocation getPosition(String name) throws SQLException {
+        if (positionCache.containsKey(name)) {
+            return positionCache.get(name);
+        }
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT x, y, z, world FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
@@ -105,6 +111,7 @@ public class ZoneStorage implements AutoCloseable {
                     if (!name.equals("position1")) {
                         warLocation = dbToWorld(warLocation);
                     }
+                    positionCache.put(name, warLocation);
                     return warLocation;
                 }
             }
@@ -141,6 +148,7 @@ public class ZoneStorage implements AutoCloseable {
             stmt.setString(5, name);
             stmt.execute();
         }
+        positionCache.clear();
     }
 
     public void loadBlocks() throws SQLException {
@@ -171,40 +179,53 @@ public class ZoneStorage implements AutoCloseable {
         }
     }
 
+    private static int BATCH_SIZE = 10000;
+
     public void saveBlocks() throws SQLException {
+        long startTime = System.currentTimeMillis();
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("DELETE FROM block_ids");
             stmt.executeUpdate("DELETE FROM blocks");
         }
         Map<String, Integer> blockIds = new HashMap<>();
+        int i = 0, changed = 0;
+        connection.setAutoCommit(false);
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO block_ids (id, name) VALUES (?, ?)"
+                "INSERT INTO blocks (x, y, z, id, data) VALUES (?, ?, ?, ?, ?)"
         )) {
-            int i = 0;
             for (WarLocation loc : zone.getCuboid()) {
-                WarBlock block = plugin.getBlock(loc);
+                WarBlock block = plugin.getBlock(loc, true);
                 if (!blockIds.containsKey(block.getBlockName())) {
-                    stmt.setInt(1, i);
-                    stmt.setString(2, block.getBlockName());
-                    stmt.addBatch();
                     blockIds.put(block.getBlockName(), i++);
                 }
-            }
-            stmt.executeBatch();
-        }
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO blocks (x, y, z, id, data) VALUES (?, ?, ?, ?, ?)")) {
-            for (WarLocation loc : zone.getCuboid()) {
-                WarBlock block = plugin.getBlock(loc);
                 stmt.setInt(1, worldToDb(loc).getBlockX());
                 stmt.setInt(2, worldToDb(loc).getBlockY());
                 stmt.setInt(3, worldToDb(loc).getBlockZ());
                 stmt.setInt(4, blockIds.get(block.getBlockName()));
                 stmt.setString(5, block.getSerialized());
                 stmt.addBatch();
+                if (++changed % BATCH_SIZE == 0) {
+                    stmt.executeBatch();
+                    if ((System.currentTimeMillis() - startTime) >= 5000L) {
+                        String seconds = new DecimalFormat("#0.00").format((double) (System.currentTimeMillis() - startTime) / 1000.0D);
+                        plugin.logInfo("Still saving zone " + zone.getName() + ", " + seconds + " seconds elapsed.");
+                    }
+                }
             }
             stmt.executeBatch();
         }
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "INSERT INTO block_ids (id, name) VALUES (?, ?)"
+        )) {
+            for (Map.Entry<String, Integer> e : blockIds.entrySet()) {
+                stmt.setInt(1, e.getValue());
+                stmt.setString(2, e.getKey());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+        connection.commit();
+        connection.setAutoCommit(true);
     }
 
     /**

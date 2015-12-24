@@ -8,6 +8,7 @@ import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneValidator;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataContainer;
@@ -71,7 +72,7 @@ public class WarPlugin implements ServerAPI {
         config = new WarConfig(new File(dataDir, "war.sl3"));
         validator = new ZoneValidator(config);
         for (String zoneName : config.getZones()) {
-            logger.info("[War] Loading zone " + zoneName + "...");
+            logger.info("Loading zone " + zoneName + "...");
             Warzone zone = new Warzone(zoneName, this);
             zones.put(zoneName, zone);
         }
@@ -92,6 +93,11 @@ public class WarPlugin implements ServerAPI {
 
     public WarConfig getConfig() {
         return config;
+    }
+
+    @Override
+    public void logInfo(String message) {
+        logger.info(message);
     }
 
     public Warzone getZone(String zoneName) {
@@ -157,17 +163,20 @@ public class WarPlugin implements ServerAPI {
     }
 
     @Override
-    public WarBlock getBlock(WarLocation location) {
-        String name, serialized;
+    public WarBlock getBlock(WarLocation location, boolean cheap) {
+        String serialized = "";
         Map<String, Object> data = new HashMap<>();
         Location<World> sloc = getSpongeLocation(location);
-        Map<DataQuery, Object> values = sloc.getBlock().toContainer().getValues(true);
-        for (DataQuery q : values.keySet()) {
-            data.put(q.asString('.'), values.get(q));
+        BlockState block = sloc.getBlock();
+        if (!cheap) {
+            Map<DataQuery, Object> values = block.toContainer().getValues(true);
+            for (DataQuery q : values.keySet()) {
+                data.put(q.asString('.'), values.get(q));
+            }
+            // TODO test serialized interop with Bukkit
+            serialized = yaml.dump(data);
         }
-        name = sloc.getBlock().getType().getName();
-        // TODO test serialized interop with Bukkit
-        serialized = yaml.dump(data);
+        String name = block.getType().getName();
         return new WarBlock(name, data, serialized);
     }
 

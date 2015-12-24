@@ -70,9 +70,9 @@ public class WarCuboid implements Iterable<WarLocation> {
         @Override
         public boolean hasNext() {
             int li = 0;
-            for (int x = cuboid.getMinBlock().getBlockX(); x < cuboid.getMaxBlock().getBlockX(); x++) {
-                for (int y = cuboid.getMinBlock().getBlockY(); y < cuboid.getMaxBlock().getBlockY(); y++) {
-                    for (int z = cuboid.getMinBlock().getBlockZ(); z < cuboid.getMaxBlock().getBlockZ(); z++) {
+            for (int x = cuboid.getMinBlock().getBlockX(); x <= cuboid.getMaxBlock().getBlockX(); x++) {
+                for (int y = cuboid.getMinBlock().getBlockY(); y <= cuboid.getMaxBlock().getBlockY(); y++) {
+                    for (int z = cuboid.getMinBlock().getBlockZ(); z <= cuboid.getMaxBlock().getBlockZ(); z++) {
                         if (li++ == i) {
                             return true;
                         }
@@ -85,9 +85,9 @@ public class WarCuboid implements Iterable<WarLocation> {
         @Override
         public WarLocation next() {
             int li = 0;
-            for (int x = cuboid.getMinBlock().getBlockX(); x < cuboid.getMaxBlock().getBlockX(); x++) {
-                for (int y = cuboid.getMinBlock().getBlockY(); y < cuboid.getMaxBlock().getBlockY(); y++) {
-                    for (int z = cuboid.getMinBlock().getBlockZ(); z < cuboid.getMaxBlock().getBlockZ(); z++) {
+            for (int x = cuboid.getMinBlock().getBlockX(); x <= cuboid.getMaxBlock().getBlockX(); x++) {
+                for (int y = cuboid.getMinBlock().getBlockY(); y <= cuboid.getMaxBlock().getBlockY(); y++) {
+                    for (int z = cuboid.getMinBlock().getBlockZ(); z <= cuboid.getMaxBlock().getBlockZ(); z++) {
                         if (li++ == i) {
                             i++;
                             return new WarLocation(x, y, z, cuboid.getMinBlock().getWorld());
