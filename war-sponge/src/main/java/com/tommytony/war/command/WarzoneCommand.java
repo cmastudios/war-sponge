@@ -3,13 +3,12 @@ package com.tommytony.war.command;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
 import com.tommytony.war.zone.Warzone;
-import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.text.Text;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,9 +18,9 @@ import java.util.Optional;
  */
 public class WarzoneCommand implements CommandCallable {
 
-    private final Optional<Text> desc = Optional.of((Text) Texts.of("Teleport to a zone"));
-    private final Optional<Text> help = Optional.of((Text) Texts.of("Teleport to a warzone, or join automatically."));
-    private final Text usage = (Text) Texts.of("<zone>");
+    private final Optional<Text> desc = Optional.of((Text) Text.of("Teleport to a zone"));
+    private final Optional<Text> help = Optional.of((Text) Text.of("Teleport to a warzone, or join automatically."));
+    private final Text usage = (Text) Text.of("<zone>");
 
     private WarPlugin plugin;
 
@@ -45,7 +44,7 @@ public class WarzoneCommand implements CommandCallable {
                 first = false;
                 zones.append(zoneName);
             }
-            commandSource.sendMessage(Texts.of("Warzones: ", zones.toString()));
+            commandSource.sendMessage(Text.of("Warzones: ", zones.toString()));
             return CommandResult.success();
         }
         String zoneName = argv[0];

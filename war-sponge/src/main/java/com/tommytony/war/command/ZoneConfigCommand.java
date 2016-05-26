@@ -4,12 +4,11 @@ import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneSetting;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -38,19 +37,19 @@ public class ZoneConfigCommand implements CommandCallable {
                 first = false;
                 zones.append(zoneName);
             }
-            source.sendMessage(Texts.of("Warzones: ", zones.toString()));
+            source.sendMessage(Text.of("Warzones: ", zones.toString()));
             StringBuilder properties = new StringBuilder();
             for (ZoneSetting setting : ZoneSetting.values()) {
                 properties.append(setting.name().toLowerCase()).append("<").append(setting.getDataType().getSimpleName());
                 properties.append("> (").append(setting.getDefaultValue().toString()).append(")\n");
             }
-            source.sendMessage(Texts.of("Available properties:\n", properties.toString()));
+            source.sendMessage(Text.of("Available properties:\n", properties.toString()));
             return CommandResult.empty();
         } else if (argv.length == 1) {
             String zoneName = argv[0];
             Warzone zone = plugin.getZone(zoneName);
             if (zone == null) {
-                throw new CommandException(Texts.of(String.format("Can't find warzone %s.", zoneName)));
+                throw new CommandException(Text.of(String.format("Can't find warzone %s.", zoneName)));
             }
             StringBuilder properties = new StringBuilder();
             for (ZoneSetting setting : ZoneSetting.values()) {
@@ -58,42 +57,42 @@ public class ZoneConfigCommand implements CommandCallable {
                 try {
                     properties.append("> (").append(zone.getConfig().getObject(setting).toString()).append(")\n");
                 } catch (SQLException e) {
-                    throw new CommandException(Texts.of("Failed to load properties for warzone."), e);
+                    throw new CommandException(Text.of("Failed to load properties for warzone."), e);
                 }
             }
-            source.sendMessage(Texts.of("Properties of warzone `", zone.getName(), "':\n", properties.toString()));
+            source.sendMessage(Text.of("Properties of warzone `", zone.getName(), "':\n", properties.toString()));
             return CommandResult.success();
         } else if (argv.length == 2) {
             String zoneName = argv[0];
             Warzone zone = plugin.getZone(zoneName);
             if (zone == null) {
-                throw new CommandException(Texts.of(String.format("Can't find warzone %s.", zoneName)));
+                throw new CommandException(Text.of(String.format("Can't find warzone %s.", zoneName)));
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             try {
-                source.sendMessage(Texts.of(setting.name().toLowerCase(), " <", setting.getDataType().getSimpleName(), "> = ",
+                source.sendMessage(Text.of(setting.name().toLowerCase(), " <", setting.getDataType().getSimpleName(), "> = ",
                         zone.getConfig().getObject(setting).toString()));
             } catch (SQLException e) {
-                throw new CommandException(Texts.of("Failed to load properties for warzone."), e);
+                throw new CommandException(Text.of("Failed to load properties for warzone."), e);
             }
             return CommandResult.empty();
         } else if (argv.length == 3) {
             String zoneName = argv[0];
             Warzone zone = plugin.getZone(zoneName);
             if (zone == null) {
-                throw new CommandException(Texts.of(String.format("Can't find warzone %s.", zoneName)));
+                throw new CommandException(Text.of(String.format("Can't find warzone %s.", zoneName)));
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             String value = argv[2];
             try {
                 zone.getConfig().setValue(setting, value);
-                source.sendMessage(Texts.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
+                source.sendMessage(Text.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
             } catch (SQLException e) {
-                throw new CommandException(Texts.of("Failed to set property for warzone."), e);
+                throw new CommandException(Text.of("Failed to set property for warzone."), e);
             }
             return CommandResult.success();
         } else {
-            throw new CommandException(Texts.of("Insufficient arguments."));
+            throw new CommandException(Text.of("Insufficient arguments."));
         }
     }
 
@@ -135,12 +134,12 @@ public class ZoneConfigCommand implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("View or set properties of warzone"));
+        return Optional.of(Text.of("View or set properties of warzone"));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Texts.of("With no arguments: displays a list of warzones and properties\n" +
+        return Optional.of(Text.of("With no arguments: displays a list of warzones and properties\n" +
                 "With one argument: lists properties of the warzone\n" +
                 "With two arguments: prints value of property of the warzone\n" +
                 "With three arguments: sets value of property of the warzone to value"));
@@ -148,6 +147,6 @@ public class ZoneConfigCommand implements CommandCallable {
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("[zone] [option] [value]");
+        return Text.of("[zone] [option] [value]");
     }
 }

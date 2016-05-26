@@ -8,7 +8,6 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,15 +26,15 @@ public class ResetZoneCommand implements CommandCallable {
             String zoneName = argv[0];
             Warzone zone = plugin.getZone(zoneName);
             if (zone == null) {
-                throw new CommandException(Texts.of(String.format("Can't find zone %s", zoneName)));
+                throw new CommandException(Text.of(String.format("Can't find zone %s", zoneName)));
             }
-            source.sendMessage(Texts.of(String.format("Reloading zone %s...", zoneName)));
+            source.sendMessage(Text.of(String.format("Reloading zone %s...", zoneName)));
             zone.reset();
             int affected = (int) Math.floor(zone.getCuboid().getSize());
-            source.sendMessage(Texts.of(String.format("Reloaded %d blocks in zone %s.", affected, zoneName)));
+            source.sendMessage(Text.of(String.format("Reloaded %d blocks in zone %s.", affected, zoneName)));
             return CommandResult.builder().affectedBlocks(affected).build();
         }
-        throw new CommandException(Texts.of("Insufficient arguments."));
+        throw new CommandException(Text.of("Insufficient arguments."));
     }
 
     @Override
@@ -52,16 +51,16 @@ public class ResetZoneCommand implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("Reset and reload a zone"));
+        return Optional.of(Text.of("Reset and reload a zone"));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Texts.of("Ends the current game in the zone, then proceeds to reload all blocks from disk."));
+        return Optional.of(Text.of("Ends the current game in the zone, then proceeds to reload all blocks from disk."));
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("<zone>");
+        return Text.of("<zone>");
     }
 }

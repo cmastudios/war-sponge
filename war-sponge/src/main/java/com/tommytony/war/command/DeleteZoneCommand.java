@@ -2,12 +2,11 @@ package com.tommytony.war.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 
 import java.text.MessageFormat;
 import java.util.List;
@@ -24,14 +23,14 @@ public class DeleteZoneCommand implements CommandCallable {
     public CommandResult process(CommandSource source, String arguments) throws CommandException {
         String[] args = arguments.trim().split(" ");
         if (args.length == 0 || args[0].length() == 0) {
-            throw new CommandException(Texts.of("Insufficient arguments."));
+            throw new CommandException(Text.of("Insufficient arguments."));
         }
         String zone = args[0].trim();
         if (!plugin.getZones().containsKey(zone)) {
-            throw new CommandException(Texts.of("Failed to find warzone ", zone));
+            throw new CommandException(Text.of("Failed to find warzone ", zone));
         }
         String output = plugin.deleteZone(zone);
-        source.sendMessage(Texts.of(MessageFormat.format("Deleted warzone {0}, moved data file to {1}.", zone, output)));
+        source.sendMessage(Text.of(MessageFormat.format("Deleted warzone {0}, moved data file to {1}.", zone, output)));
         return CommandResult.empty();
     }
 
@@ -47,16 +46,16 @@ public class DeleteZoneCommand implements CommandCallable {
 
     @Override
     public Optional<? extends Text> getShortDescription(CommandSource source) {
-        return Optional.of(Texts.of("Delete a warzone"));
+        return Optional.of(Text.of("Delete a warzone"));
     }
 
     @Override
     public Optional<? extends Text> getHelp(CommandSource source) {
-        return Optional.of(Texts.of("Delete a zone. Only permitted through permissions."));
+        return Optional.of(Text.of("Delete a zone. Only permitted through permissions."));
     }
 
     @Override
     public Text getUsage(CommandSource source) {
-        return Texts.of("<zone>");
+        return Text.of("<zone>");
     }
 }

@@ -3,21 +3,20 @@ package com.tommytony.war.command;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarConfig;
 import com.tommytony.war.WarPlugin;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.Texts;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.text.Text;
 
 import java.util.List;
 import java.util.Optional;
 
 public class WarConfigCommand implements CommandCallable {
 
-    private final Optional<Text> desc = Optional.of((Text) Texts.of("View/modify War config"));
-    private final Optional<Text> help = Optional.of((Text) Texts.of("Allows viewing of the server config or changing various settings."));
-    private final Text usage = (Text) Texts.of("[-p] setting value");
+    private final Optional<Text> desc = Optional.of((Text) Text.of("View/modify War config"));
+    private final Optional<Text> help = Optional.of((Text) Text.of("Allows viewing of the server config or changing various settings."));
+    private final Text usage = (Text) Text.of("[-p] setting value");
 
     private final WarPlugin plugin;
 
