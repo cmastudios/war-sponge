@@ -13,8 +13,9 @@ import java.util.Map;
 /**
  * Manages the war zone database file, which contains all the data for the war zone.
  */
-public class ZoneStorage implements AutoCloseable {
+class ZoneStorage implements AutoCloseable {
     private static int DATABASE_VERSION = 1;
+    private static int BATCH_SIZE = 10000;
     private final Warzone zone;
     private final Connection connection;
     private final File dataStore;
@@ -41,7 +42,7 @@ public class ZoneStorage implements AutoCloseable {
         return connection;
     }
 
-    public File getDataStore() {
+    File getDataStore() {
         return dataStore;
     }
 
@@ -66,8 +67,8 @@ public class ZoneStorage implements AutoCloseable {
             // brand new database file
             Statement stmt = connection.createStatement();
             stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, world TEXT)");
-            stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER PRIMARY KEY, name TEXT) WITHOUT ROWID");
-            stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, data BLOB)");
+            stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER, name TEXT)");
+            stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, meta INTEGER, data BLOB)");
             stmt.executeUpdate(String.format("PRAGMA user_version = %d", DATABASE_VERSION));
         } else if (version < DATABASE_VERSION) {
             // upgrade
@@ -97,7 +98,7 @@ public class ZoneStorage implements AutoCloseable {
      * @return the location of the position, or absent if not found.
      * @throws SQLException
      */
-    public WarLocation getPosition(String name) throws SQLException {
+    WarLocation getPosition(String name) throws SQLException {
         if (positionCache.containsKey(name)) {
             return positionCache.get(name);
         }
@@ -118,7 +119,7 @@ public class ZoneStorage implements AutoCloseable {
         return null;
     }
 
-    public boolean hasPosition(String name) throws SQLException {
+    boolean hasPosition(String name) throws SQLException {
         return getPosition(name) != null;
     }
 
@@ -129,7 +130,7 @@ public class ZoneStorage implements AutoCloseable {
      * @param location Location to write to the storage.
      * @throws SQLException
      */
-    public void setPosition(String name, WarLocation location) throws SQLException {
+    void setPosition(String name, WarLocation location) throws SQLException {
         String sql;
         if (this.hasPosition(name)) {
             sql = "UPDATE coordinates SET x = ?, y = ?, z = ?, world = ? WHERE name = ?";
@@ -150,7 +151,7 @@ public class ZoneStorage implements AutoCloseable {
         positionCache.clear();
     }
 
-    public void loadBlocks() throws SQLException {
+    void loadBlocks() throws SQLException {
         Map<Integer, String> blockIds = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT id, name FROM block_ids"
@@ -162,7 +163,7 @@ public class ZoneStorage implements AutoCloseable {
             }
         }
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT x, y, z, id, data FROM blocks"
+                "SELECT x, y, z, id, meta, data FROM blocks"
         )) {
             try (ResultSet result = stmt.executeQuery()) {
                 while (result.next()) {
@@ -171,16 +172,15 @@ public class ZoneStorage implements AutoCloseable {
                     WarLocation loc = new WarLocation(result.getInt("x"), result.getInt("y"), result.getInt("z"),
                             this.getPosition("position1").getWorld());
                     loc = dbToWorld(loc);
-                    WarBlock block = new WarBlock(name, null, serialized, (short) 0);
+                    short meta = result.getShort("meta");
+                    WarBlock block = new WarBlock(name, null, serialized, meta);
                     plugin.setBlock(loc, block);
                 }
             }
         }
     }
 
-    private static int BATCH_SIZE = 10000;
-
-    public void saveBlocks() throws SQLException {
+    void saveBlocks() throws SQLException {
         long startTime = System.currentTimeMillis();
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("DELETE FROM block_ids");
@@ -190,7 +190,7 @@ public class ZoneStorage implements AutoCloseable {
         int i = 0, changed = 0;
         connection.setAutoCommit(false);
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO blocks (x, y, z, id, data) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO blocks (x, y, z, id, meta, data) VALUES (?, ?, ?, ?, ?, ?)"
         )) {
             for (WarLocation loc : zone.getCuboid()) {
                 WarBlock block = plugin.getBlock(loc, false);
@@ -201,7 +201,8 @@ public class ZoneStorage implements AutoCloseable {
                 stmt.setInt(2, worldToDb(loc).getBlockY());
                 stmt.setInt(3, worldToDb(loc).getBlockZ());
                 stmt.setInt(4, blockIds.get(block.getBlockName()));
-                stmt.setString(5, block.getSerialized());
+                stmt.setShort(5, block.getMeta());
+                stmt.setString(6, block.getSerialized());
                 stmt.addBatch();
                 if (++changed % BATCH_SIZE == 0) {
                     stmt.executeBatch();

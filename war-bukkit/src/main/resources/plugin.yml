@@ -1,0 +1,57 @@
+name: War
+version: ${project.version}
+description: ${project.description}
+author: cmastudios
+website: ${project.url}
+main: ${main.class}
+commands:
+  warzone:
+    description: Teleport to a warzone
+    usage: /<command> <zone>
+    aliases: [zone]
+    permission: war.teleport
+  warcfg:
+    description: View/modify War config
+    usage: /<command> [-p] setting value
+    aliases: [warconfig]
+    permission: war.config
+  setzone:
+    description: Creates a warzone
+    usage: /<command> <name/c1/c2>
+    aliases: [zoneset]
+    permission: war.zone.create
+  delzone:
+    description: Delete a warzone
+    usage: /<command> <name>
+    aliases: [rmzone, deletezone]
+    permission: war.zone.delete
+  zonecfg:
+    description: View or set properties of warzone
+    usage: /<command> <zone> setting value
+    aliases: [zoneconfig, zc]
+    permission: war.zone.config
+  savezone:
+    description: Saves the zone to disk
+    usage: /<command> <zone>
+    aliases: [zonesave, zs]
+    permission: war.zone.save
+  resetzone:
+    description: Reset and reload a zone
+    usage: /<command> <zone>
+    aliases: [zonereset, zr]
+    permission: war.zone.reset
+permissions:
+  war.teleport:
+    description: Required to teleport to a warzone
+    default: true
+  war.zonemaker:
+    description: Required to modify and set warzones
+    children:
+      war.zone.create: true
+      war.zone.delete: true
+      war.zone.config: true
+      war.zone.save: true
+      war.zone.reset: true
+      war.zone.construct: true
+  war.config:
+    description: Change global War config

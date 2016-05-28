@@ -4,6 +4,7 @@ import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
+import com.tommytony.war.zone.Warzone;
 
 import java.io.File;
 
@@ -43,7 +44,7 @@ public interface ServerAPI {
      * @see com.tommytony.war.zone.ZoneSetting
      * @return server config.
      */
-    WarConfig getConfig();
+    WarConfig getWarConfig();
 
     /**
      * Print a message to the server console.
@@ -51,4 +52,28 @@ public interface ServerAPI {
      * @param message Message to print
      */
     void logInfo(String message);
+
+    /**
+     * Get infomation about a loaded warzone.
+     *
+     * @param zoneName Warzone currently in memory.
+     * @return Warzone object or null if not found.
+     */
+    Warzone getZone(String zoneName);
+
+    /**
+     * Create a warzone.
+     *
+     * @param zoneName Name of the warzone to create.
+     * @return Created warzone object.
+     */
+    Warzone createZone(String zoneName);
+
+    /**
+     * Delete a warzone.
+     *
+     * @param zoneName Name of the warzone to delete.
+     * @return Path to deleted zone database on filesystem.
+     */
+    String deleteZone(String zoneName);
 }

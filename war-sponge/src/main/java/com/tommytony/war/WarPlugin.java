@@ -15,8 +15,6 @@ import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataContainer;
-import org.spongepowered.api.data.DataQuery;
-import org.spongepowered.api.data.DataView;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -85,7 +83,7 @@ public class WarPlugin implements ServerAPI {
         }
     }
 
-    public Game getGame() {
+    private Game getGame() {
         return game;
     }
 
@@ -98,7 +96,7 @@ public class WarPlugin implements ServerAPI {
         return dataDir;
     }
 
-    public WarConfig getConfig() {
+    public WarConfig getWarConfig() {
         return config;
     }
 

@@ -10,6 +10,7 @@
     <modules>
         <module>war-core</module>
         <module>war-sponge</module>
+        <module>war-bukkit</module>
     </modules>
 
     <name>War</name>

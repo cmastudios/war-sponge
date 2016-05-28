@@ -1,7 +1,6 @@
 package com.tommytony.war.zone;
 
 import com.tommytony.war.ServerAPI;
-import com.tommytony.war.WarConfig;
 import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -30,9 +29,17 @@ public class Warzone implements AutoCloseable {
         this.plugin = plugin;
         try {
             this.db = new ZoneStorage(this, plugin);
-            this.config = new ZoneConfig(db.getConnection(), "settings", plugin.getConfig().getZoneDefaults());
+            this.config = new ZoneConfig(db.getConnection(), "settings", plugin.getWarConfig().getZoneDefaults());
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    public WarCuboid getCuboid() {
+        try {
+            return new WarCuboid(db.getPosition("position1"), db.getPosition("position2"));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -45,14 +52,6 @@ public class Warzone implements AutoCloseable {
         try {
             db.setPosition("position1", cuboid.getMinBlock());
             db.setPosition("position2", cuboid.getMaxBlock());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public WarCuboid getCuboid() {
-        try {
-            return new WarCuboid(db.getPosition("position1"), db.getPosition("position2"));
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
