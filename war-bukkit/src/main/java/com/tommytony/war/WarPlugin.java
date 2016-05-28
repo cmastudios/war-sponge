@@ -2,6 +2,7 @@ package com.tommytony.war;
 
 import com.tommytony.war.command.*;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.listener.PlayerListener;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -22,18 +23,19 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public final class WarPlugin extends JavaPlugin implements ServerAPI {
     private WarConfig config;
     private ZoneValidator validator;
     private HashMap<String, Warzone> zones;
+    private HashMap<UUID, BukkitWarPlayer> players;
+    private WarListener listener;
 
     @Override
     public void onDisable() {
         super.onDisable();
+        players.clear();
     }
 
     @Override
@@ -56,6 +58,8 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         }
         validator = new ZoneValidator(config);
         zones = new HashMap<>();
+        players = new HashMap<>();
+        listener = new WarListener(this);
         this.getCommand("warzone").setExecutor(new WarzoneCommand(this));
         this.getCommand("warcfg").setExecutor(new WarConfigCommand(this));
         this.getCommand("setzone").setExecutor(new SetZoneCommand(this));
@@ -63,6 +67,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         this.getCommand("zonecfg").setExecutor(new ZoneConfigCommand(this));
         this.getCommand("savezone").setExecutor(new SaveZoneCommand(this));
         this.getCommand("resetzone").setExecutor(new ResetZoneCommand(this));
+        this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         try {
             for (String zoneName : config.getZones()) {
                 this.logInfo("Loading zone " + zoneName + "...");
@@ -76,6 +81,9 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
 
     @Override
     public WarBlock getBlock(WarLocation location, boolean cheap) {
+        if (location == null) {
+            return null;
+        }
         Location loc = this.getBukkitLocation(location);
         Block block = loc.getBlock();
         BlockState state = block.getState();
@@ -118,8 +126,13 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     public void setBlock(WarLocation location, WarBlock block) {
         Location bukkitLoc = this.getBukkitLocation(location);
         BlockState modify = bukkitLoc.getBlock().getState();
+        String blockName = block.getBlockName();
+        // attempt to get an acceptable name from the JSON variant. used for internal constants.
+        if (blockName.startsWith("minecraft:")) {
+            blockName = blockName.substring(10);
+        }
         ItemStack data = new ItemStack(
-                Material.valueOf(block.getBlockName()), // this particular line of code will cause an error if the user loads a warzone from sponge
+                Material.matchMaterial(blockName), // this particular line of code will cause an error if the user loads a warzone from sponge
                 0, block.getMeta());
         if (modify.getType() != data.getType() || !modify.getData().equals(data.getData())) {
             // Update the type & data if it has changed
@@ -233,7 +246,8 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         this.getLogger().info(message);
     }
 
-    public HashMap<String, Warzone> getZones() {
+    @Override
+    public Map<String, Warzone> getZones() {
         return zones;
     }
 
@@ -242,8 +256,14 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         return zones.get(zoneName);
     }
 
-    public WarPlayerState getState(Player player) {
-        return WarPlayerState.getState(player.getUniqueId());
+    public WarPlayer getWarPlayer(Player player) {
+        if (players.containsKey(player.getUniqueId())) {
+            return players.get(player.getUniqueId());
+        } else {
+            BukkitWarPlayer wp = new BukkitWarPlayer(player.getUniqueId(), this);
+            players.put(player.getUniqueId(), wp);
+            return wp;
+        }
     }
 
     public ZoneValidator getValidator() {
@@ -281,5 +301,22 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void scheduleTask(double delay, double interval, Runnable runnable) {
+        long delayTicks = (long) (delay * 20.0);
+        long intervalTicks = (long) (interval * 20.0);
+        this.getServer().getScheduler().runTaskTimer(this, runnable, delayTicks, intervalTicks);
+    }
+
+    @Override
+    public void delayTask(double delay, Runnable runnable) {
+        long delayTicks = (long) (delay * 20.0);
+        this.getServer().getScheduler().runTaskLater(this, runnable, delayTicks);
+    }
+
+    public WarListener getListener() {
+        return listener;
     }
 }

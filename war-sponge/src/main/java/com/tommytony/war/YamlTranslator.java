@@ -11,10 +11,10 @@ import java.util.Map;
 
 import static org.spongepowered.api.data.DataQuery.of;
 
-public class YamlTranslator implements DataTranslator<String> {
+class YamlTranslator implements DataTranslator<String> {
     private Yaml yaml;
 
-    public YamlTranslator() {
+    YamlTranslator() {
         this.yaml = new Yaml();
     }
 
@@ -29,7 +29,7 @@ public class YamlTranslator implements DataTranslator<String> {
     }
 
     @Override
-    public DataView translateFrom(String node) {
+    public DataContainer translateFrom(String node) {
         DataContainer container = new MemoryDataContainer();
         if (node != null && !node.isEmpty()) {
             Object data = yaml.load(node);

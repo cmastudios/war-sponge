@@ -1,12 +1,16 @@
 package com.tommytony.war.zone;
 
 import com.tommytony.war.ServerAPI;
+import com.tommytony.war.WarPlayer;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Representation of a war zone area, blocks, and settings.
@@ -17,6 +21,8 @@ public class Warzone implements AutoCloseable {
     private final ZoneStorage db;
     private final ZoneConfig config;
     private final ServerAPI plugin;
+    private final ZoneListener listener;
+    private WarGame game;
 
     /**
      * Load or create a war zone from the war settings store.
@@ -33,6 +39,7 @@ public class Warzone implements AutoCloseable {
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+        this.listener = new ZoneListener(this, plugin);
     }
 
     public WarCuboid getCuboid() {
@@ -81,6 +88,22 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    public List<String> getTeams() {
+        try {
+            return db.getTeams();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public WarLocation getTeamSpawn(String teamName) {
+        try {
+            return db.getPosition("teamspawn" + teamName);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public File getDataFile() {
         return db.getDataStore();
     }
@@ -104,6 +127,29 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    public void mask(WarPlayer player) {
+        for (WarLocation loc : this.getCuboid()) {
+            // following condition checks if the block is on a face of the cuboid
+            if (loc.getBlockX() == this.getCuboid().getMinBlock().getBlockX() || loc.getBlockX() == this.getCuboid().getMaxBlock().getBlockX()
+                    || loc.getBlockY() == this.getCuboid().getMinBlock().getBlockY() || loc.getBlockY() == this.getCuboid().getMaxBlock().getBlockY()
+                    || loc.getBlockZ() == this.getCuboid().getMinBlock().getBlockZ() || loc.getBlockZ() == this.getCuboid().getMaxBlock().getBlockZ()) {
+                if (plugin.getBlock(loc, true).getBlockName().toLowerCase().contains("air"))
+                    player.setLocalBlock(loc, new WarBlock("minecraft:glass", null, "", (short) 0));
+            }
+        }
+    }
+
+    public void unmask(WarPlayer player) {
+        for (WarLocation loc : this.getCuboid()) {
+            // following condition checks if the block is on a face of the cuboid
+            if (loc.getBlockX() == this.getCuboid().getMinBlock().getBlockX() || loc.getBlockX() == this.getCuboid().getMaxBlock().getBlockX()
+                    || loc.getBlockY() == this.getCuboid().getMinBlock().getBlockY() || loc.getBlockY() == this.getCuboid().getMaxBlock().getBlockY()
+                    || loc.getBlockZ() == this.getCuboid().getMinBlock().getBlockZ() || loc.getBlockZ() == this.getCuboid().getMaxBlock().getBlockZ()) {
+                player.setLocalBlock(loc, plugin.getBlock(loc, false));
+            }
+        }
+    }
+
     @Override
     public void close() throws Exception {
         db.close();
@@ -111,5 +157,17 @@ public class Warzone implements AutoCloseable {
 
     public ZoneConfig getConfig() {
         return config;
+    }
+
+    public ZoneListener getListener() {
+        return listener;
+    }
+
+    public Optional<WarGame> getGame() {
+        return Optional.ofNullable(game);
+    }
+
+    public void setGame(WarGame game) {
+        this.game = game;
     }
 }

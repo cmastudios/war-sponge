@@ -7,7 +7,9 @@ import com.tommytony.war.struct.WarLocation;
 import java.io.File;
 import java.sql.*;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -121,6 +123,28 @@ class ZoneStorage implements AutoCloseable {
 
     boolean hasPosition(String name) throws SQLException {
         return getPosition(name) != null;
+    }
+
+    /**
+     * Gets a list of teams based on values in the positions database.
+     *
+     * @return list of teams
+     * @throws SQLException
+     */
+    List<String> getTeams() throws SQLException {
+        List<String> teams = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT name FROM coordinates")) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    String name = resultSet.getString("name");
+                    if (name.startsWith("teamspawn")) {
+                        teams.add(name.substring(9));
+                    }
+                }
+            }
+        }
+        return teams;
     }
 
     /**

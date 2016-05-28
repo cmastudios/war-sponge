@@ -1,7 +1,7 @@
 package com.tommytony.war.command;
 
 import com.google.common.collect.ImmutableList;
-import com.tommytony.war.WarPlayerState;
+import com.tommytony.war.WarPlayer;
 import com.tommytony.war.WarPlugin;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -42,8 +42,8 @@ public class SetZoneCommand implements CommandCallable {
         if (args.length == 0 || args[0].length() == 0) {
             throw new CommandException(Text.of("Insufficient arguments."));
         }
-        if (plugin.getState(player).isCreatingZone() && (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2"))) {
-            WarPlayerState.ZoneCreationState state = plugin.getState(player).getZoneCreationState();
+        if (plugin.getWarPlayer(player).isCreatingZone() && (args[0].equalsIgnoreCase("c1") || args[0].equalsIgnoreCase("c2"))) {
+            WarPlayer.ZoneCreationState state = plugin.getWarPlayer(player).getZoneCreationState();
             final Optional<BlockRayHit<World>> block = BlockRay.from(player).filter(BlockRay.onlyAirFilter()).end();
             if (!block.isPresent()) {
                 throw new CommandException(Text.of("You are not pointing at a block."));
@@ -66,7 +66,7 @@ public class SetZoneCommand implements CommandCallable {
                 Warzone zone = plugin.createZone(state.getZoneName());
                 zone.setCuboid(cuboid);
                 zone.setTeleport(plugin.getWarLocation(player.getLocation()));
-                plugin.getState(player).setZoneCreationState(null);
+                plugin.getWarPlayer(player).setZoneCreationState(null);
                 commandSource.sendMessage(Text.of(MessageFormat.format("Successfully created warzone {0} with dimensions {1}.", zone.getName(), cuboid.toString())));
                 return CommandResult.success();
             }
@@ -77,7 +77,7 @@ public class SetZoneCommand implements CommandCallable {
         if (plugin.getValidator().validateName(args[0]) == ZoneValidator.ValidationStatus.INVALID) {
             throw new CommandException(Text.of(MessageFormat.format("Name `{0}'' is invalid for a warzone.", args[0])));
         }
-        plugin.getState(player).setZoneCreationState(new WarPlayerState.ZoneCreationState(args[0]));
+        plugin.getWarPlayer(player).setZoneCreationState(new WarPlayer.ZoneCreationState(args[0]));
         commandSource.sendMessage(Text.of(MessageFormat.format("You are now creating warzone {0}. Type `/setzone c1'' to place the first corner based on the block under your cursor.", args[0])));
 
         return CommandResult.success();

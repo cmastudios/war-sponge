@@ -10,6 +10,7 @@ import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneValidator;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
@@ -31,6 +32,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "war", name = "War", version = "2.0-SNAPSHOT")
 public class WarPlugin implements ServerAPI {
@@ -48,6 +51,7 @@ public class WarPlugin implements ServerAPI {
     private Map<String, Warzone> zones;
     private ZoneValidator validator;
     private YamlTranslator translator;
+    private HashMap<UUID, SpongeWarPlayer> players;
 
     @Listener
     public void onConstruction(GameConstructionEvent event) throws InstantiationException {
@@ -59,6 +63,7 @@ public class WarPlugin implements ServerAPI {
         zones = new HashMap<>();
         translator = new YamlTranslator();
         dataDir = dataDir.getParentFile();
+        players = new HashMap<>();
     }
 
     @Listener
@@ -83,7 +88,7 @@ public class WarPlugin implements ServerAPI {
         }
     }
 
-    private Game getGame() {
+    Game getGame() {
         return game;
     }
 
@@ -143,6 +148,23 @@ public class WarPlugin implements ServerAPI {
         }
     }
 
+    @Override
+    public void scheduleTask(double delay, double interval, Runnable runnable) {
+        long delayMs = (long) (delay * 1000);
+        long intervalMs = (long) (interval * 1000);
+        Sponge.getScheduler().createTaskBuilder().execute(runnable)
+                .delay(delayMs, TimeUnit.MILLISECONDS).interval(intervalMs, TimeUnit.MILLISECONDS)
+                .name("War Repeating Task - " + interval + "s").submit(this);
+    }
+
+    @Override
+    public void delayTask(double delay, Runnable runnable) {
+        long delayMs = (long) (delay * 1000);
+        Sponge.getScheduler().createTaskBuilder().execute(runnable)
+                .delay(delayMs, TimeUnit.MILLISECONDS)
+                .name("War Delayed Task - " + delay + "s").submit(this);
+    }
+
     public Map<String, Warzone> getZones() {
         return zones;
     }
@@ -163,8 +185,14 @@ public class WarPlugin implements ServerAPI {
         return new WarLocation(location.getX(), location.getY(), location.getZ(), location.getExtent().getName());
     }
 
-    public WarPlayerState getState(Player player) {
-        return WarPlayerState.getState(player.getUniqueId());
+    public WarPlayer getWarPlayer(Player player) {
+        if (players.containsKey(player.getUniqueId())) {
+            return players.get(player.getUniqueId());
+        } else {
+            SpongeWarPlayer wp = new SpongeWarPlayer(player.getUniqueId(), this);
+            players.put(player.getUniqueId(), wp);
+            return wp;
+        }
     }
 
     @Override
@@ -185,12 +213,17 @@ public class WarPlugin implements ServerAPI {
     @Override
     public void setBlock(WarLocation location, WarBlock block) {
         Location<World> sloc = getSpongeLocation(location);
-        Optional<BlockType> type = game.getRegistry().getType(BlockType.class, block.getBlockName());
+        String blockName = block.getBlockName();
+        // attempt to make blocks from Bukkit variant usable.
+        if (!blockName.contains(":")) {
+            blockName = "minecraft:" + blockName.toLowerCase();
+        }
+        Optional<BlockType> type = game.getRegistry().getType(BlockType.class, blockName);
         if (!type.isPresent()) {
-            throw new IllegalStateException("Failed to get block type for block " + block.getBlockName());
+            throw new IllegalStateException("Failed to get block type for block " + blockName);
         }
         if (block.getData() == null && !block.getSerialized().isEmpty()) {
-            DataContainer container = (DataContainer) translator.translateFrom(block.getSerialized());
+            DataContainer container = translator.translateFrom(block.getSerialized());
             Optional<BlockSnapshot> build = BlockSnapshot.builder().build(container);
             if (build.isPresent()) {
                 build.get().withLocation(sloc).restore(true, false);
@@ -226,5 +259,9 @@ public class WarPlugin implements ServerAPI {
                 entity.remove();
             }
         }
+    }
+
+    YamlTranslator getTranslator() {
+        return translator;
     }
 }

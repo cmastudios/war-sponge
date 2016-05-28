@@ -7,6 +7,7 @@ import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
 
 import java.io.File;
+import java.util.Map;
 
 public interface ServerAPI {
     /**
@@ -53,6 +54,8 @@ public interface ServerAPI {
      */
     void logInfo(String message);
 
+    Map<String, Warzone> getZones();
+
     /**
      * Get infomation about a loaded warzone.
      *
@@ -76,4 +79,21 @@ public interface ServerAPI {
      * @return Path to deleted zone database on filesystem.
      */
     String deleteZone(String zoneName);
+
+    /**
+     * Schedule a repeating task.
+     *
+     * @param delay    Seconds to wait before first execution.
+     * @param interval Seconds to wait between executions.
+     * @param runnable Task to execute.
+     */
+    void scheduleTask(double delay, double interval, Runnable runnable);
+
+    /**
+     * Schedule a task to execute at a time in the future.
+     *
+     * @param delay    Seconds to wait before execution.
+     * @param runnable Task to execute.
+     */
+    void delayTask(double delay, Runnable runnable);
 }
