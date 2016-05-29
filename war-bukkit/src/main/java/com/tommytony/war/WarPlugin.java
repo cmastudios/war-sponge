@@ -1,6 +1,6 @@
 package com.tommytony.war;
 
-import com.tommytony.war.command.*;
+import com.tommytony.war.bukkit.command.*;
 import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.listener.PlayerListener;
 import com.tommytony.war.struct.WarBlock;
@@ -11,6 +11,7 @@ import com.tommytony.war.zone.ZoneValidator;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.block.*;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
@@ -63,7 +64,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         this.getCommand("warzone").setExecutor(new WarzoneCommand(this));
         this.getCommand("warcfg").setExecutor(new WarConfigCommand(this));
         this.getCommand("setzone").setExecutor(new SetZoneCommand(this));
-        this.getCommand("delzone").setExecutor(new DeleteZoneCommand(this));
+        this.getCommand("delzone").setExecutor(new com.tommytony.war.bukkit.command.DeleteZoneCommand(this));
         this.getCommand("zonecfg").setExecutor(new ZoneConfigCommand(this));
         this.getCommand("savezone").setExecutor(new SaveZoneCommand(this));
         this.getCommand("resetzone").setExecutor(new ResetZoneCommand(this));
@@ -119,7 +120,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
 
     public Location getBukkitLocation(WarLocation location) {
         World world = this.getServer().getWorld(location.getWorld());
-        return new Location(world, location.getX(), location.getY(), location.getZ());
+        return new Location(world, location.getX(), location.getY(), location.getZ(), (float) location.getPitch(), (float) location.getYaw());
     }
 
     @Override
@@ -228,7 +229,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     }
 
     public WarLocation getWarLocation(Location location) {
-        return new WarLocation(location.getX(), location.getY(), location.getZ(), location.getWorld().getName());
+        return new WarLocation(location.getX(), location.getY(), location.getZ(), location.getWorld().getName(), location.getPitch(), location.getYaw());
     }
 
     @Override
@@ -319,4 +320,13 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     public WarListener getListener() {
         return listener;
     }
+
+    public WarConsole getSender(CommandSender source) {
+        if (source instanceof Player) {
+            return getWarPlayer((Player) source);
+        } else {
+            return new BukkitWarConsole();
+        }
+    }
+
 }

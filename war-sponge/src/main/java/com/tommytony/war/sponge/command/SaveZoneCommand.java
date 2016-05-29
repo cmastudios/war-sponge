@@ -1,4 +1,4 @@
-package com.tommytony.war.command;
+package com.tommytony.war.sponge.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;

@@ -1,5 +1,6 @@
 package com.tommytony.war;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 import org.spongepowered.api.block.BlockState;
@@ -39,14 +40,18 @@ class SpongeWarPlayer extends WarPlayer {
         if (!player.isPresent()) {
             return null;
         }
-        return plugin.getWarLocation(player.get().getLocation());
+        Location<World> location = player.get().getLocation();
+        Vector3d rotation = player.get().getRotation();
+        return new WarLocation(location.getX(), location.getY(), location.getZ(),
+                location.getExtent().getName(), rotation.getX(), rotation.getY());
     }
 
     @Override
     public void setLocation(WarLocation location) {
         Optional<Player> player = getPlayer();
         if (player.isPresent()) {
-            player.get().setLocation(plugin.getSpongeLocation(location));
+            player.get().setLocationAndRotation(plugin.getSpongeLocation(location),
+                    new Vector3d(location.getPitch(), location.getYaw(), 0));
         }
     }
 

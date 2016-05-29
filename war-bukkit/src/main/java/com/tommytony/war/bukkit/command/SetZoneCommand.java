@@ -1,4 +1,4 @@
-package com.tommytony.war.command;
+package com.tommytony.war.bukkit.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlayer;

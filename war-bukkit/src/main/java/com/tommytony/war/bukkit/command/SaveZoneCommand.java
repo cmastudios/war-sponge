@@ -1,4 +1,4 @@
-package com.tommytony.war.command;
+package com.tommytony.war.bukkit.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
@@ -10,10 +10,10 @@ import org.bukkit.command.TabExecutor;
 
 import java.util.List;
 
-public class ResetZoneCommand implements TabExecutor {
+public class SaveZoneCommand implements TabExecutor {
     private final WarPlugin plugin;
 
-    public ResetZoneCommand(WarPlugin warPlugin) {
+    public SaveZoneCommand(WarPlugin warPlugin) {
         this.plugin = warPlugin;
     }
 
@@ -25,10 +25,10 @@ public class ResetZoneCommand implements TabExecutor {
             if (zone == null) {
                 throw new CommandException(String.format("Can't find zone %s", zoneName));
             }
-            sender.sendMessage(String.format("Reloading zone %s...", zoneName));
-            zone.reset();
+            sender.sendMessage(String.format("Saving zone %s...", zoneName));
+            zone.save();
             int affected = (int) Math.floor(zone.getCuboid().getSize());
-            sender.sendMessage(String.format("Reloaded %d blocks in zone %s.", affected, zoneName));
+            sender.sendMessage(String.format("Saved %d blocks in zone %s.", affected, zoneName));
             return true;
         }
         throw new CommandException("Insufficient arguments.");

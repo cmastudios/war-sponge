@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class WarGame {
+public class WarGame {
     private final Warzone warzone;
     private final ServerAPI plugin;
     private List<WarPlayer> players;
@@ -27,6 +27,13 @@ class WarGame {
 
     public boolean isPlaying(WarPlayer player) {
         return players.contains(player);
+    }
+
+    public void autoAssign(WarPlayer player) {
+
+    }
+
+    public void assign(Team team) {
     }
 
     public class Team {

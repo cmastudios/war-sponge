@@ -40,6 +40,11 @@ commands:
     usage: /<command> <zone>
     aliases: [zonereset, zr]
     permission: war.zone.reset
+  setpoint:
+    description: Set a location for a zone, such as a spawn or gate
+    usage: /<command> <zone> <lobby/spawn/gate> [team/autoassign]
+    aliases: [setlocation, setloc, warsetpoint]
+    permission: war.zone.config
 permissions:
   war.teleport:
     description: Required to teleport to a warzone

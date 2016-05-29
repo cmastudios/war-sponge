@@ -1,8 +1,8 @@
 package com.tommytony.war;
 
 import com.google.inject.Inject;
-import com.tommytony.war.command.*;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.sponge.command.*;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -14,6 +14,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.config.DefaultConfig;
 import org.spongepowered.api.data.DataContainer;
 import org.spongepowered.api.entity.Entity;
@@ -35,7 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "war", name = "War", version = "2.0-SNAPSHOT")
+@Plugin(id = "war", name = "War", version = "2.0-SNAPSHOT", description = "The original TDM/CTF plugin for Minecraft")
 public class WarPlugin implements ServerAPI {
     @Inject
     private Game game;
@@ -72,7 +73,7 @@ public class WarPlugin implements ServerAPI {
         game.getCommandManager().register(this, new WarzoneCommand(this), "warzone", "zone");
         game.getCommandManager().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
         game.getCommandManager().register(this, new SetZoneCommand(this), "setzone", "zoneset");
-        game.getCommandManager().register(this, new DeleteZoneCommand(this), "delzone", "rmzone", "deletezone");
+        game.getCommandManager().register(this, new com.tommytony.war.sponge.command.DeleteZoneCommand(this), "delzone", "rmzone", "deletezone");
         game.getCommandManager().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig", "zc");
         game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave", "zs");
         game.getCommandManager().register(this, new ResetZoneCommand(this), "resetzone", "reloadzone", "zr");
@@ -263,5 +264,13 @@ public class WarPlugin implements ServerAPI {
 
     YamlTranslator getTranslator() {
         return translator;
+    }
+
+    public WarConsole getSender(CommandSource source) {
+        if (source instanceof Player) {
+            return getWarPlayer((Player) source);
+        } else {
+            return new SpongeWarConsole();
+        }
     }
 }

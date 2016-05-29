@@ -68,7 +68,7 @@ class ZoneStorage implements AutoCloseable {
         } else if (version == 0) {
             // brand new database file
             Statement stmt = connection.createStatement();
-            stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, world TEXT)");
+            stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, pitch NUMERIC, yaw NUMERIC, world TEXT)");
             stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER, name TEXT)");
             stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, meta INTEGER, data BLOB)");
             stmt.executeUpdate(String.format("PRAGMA user_version = %d", DATABASE_VERSION));
@@ -105,11 +105,12 @@ class ZoneStorage implements AutoCloseable {
             return positionCache.get(name);
         }
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT x, y, z, world FROM coordinates WHERE name = ?")) {
+                "SELECT x, y, z, pitch, yaw, world FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
             try (ResultSet resultSet = stmt.executeQuery()) {
                 if (resultSet.next()) {
-                    WarLocation warLocation = new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"), resultSet.getString("world"));
+                    WarLocation warLocation = new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"),
+                            resultSet.getString("world"), resultSet.getDouble("pitch"), resultSet.getDouble("yaw"));
                     if (!name.equals("position1")) {
                         warLocation = dbToWorld(warLocation);
                     }
@@ -147,6 +148,27 @@ class ZoneStorage implements AutoCloseable {
         return teams;
     }
 
+    Map<WarLocation, String> getGates() throws SQLException {
+        Map<WarLocation, String> gates = new HashMap<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT x, y, z, world, name FROM coordinates")) {
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    String name = resultSet.getString("name");
+                    WarLocation warLocation = new WarLocation(resultSet.getDouble("x"), resultSet.getDouble("y"), resultSet.getDouble("z"),
+                            resultSet.getString("world"), resultSet.getDouble("pitch"), resultSet.getDouble("yaw"));
+                    if (!name.equals("position1")) {
+                        warLocation = dbToWorld(warLocation);
+                    }
+                    if (name.startsWith("gate")) {
+                        gates.put(warLocation, name.substring(4));
+                    }
+                }
+            }
+        }
+        return gates;
+    }
+
     /**
      * Set a position in the coordinates table to a location.
      *
@@ -157,9 +179,9 @@ class ZoneStorage implements AutoCloseable {
     void setPosition(String name, WarLocation location) throws SQLException {
         String sql;
         if (this.hasPosition(name)) {
-            sql = "UPDATE coordinates SET x = ?, y = ?, z = ?, world = ? WHERE name = ?";
+            sql = "UPDATE coordinates SET x = ?, y = ?, z = ?, world = ?, pitch = ?, yaw = ? WHERE name = ?";
         } else {
-            sql = "INSERT INTO coordinates (x, y, z, world, name) VALUES (?, ?, ?, ?, ?)";
+            sql = "INSERT INTO coordinates (x, y, z, world, pitch, yaw, name) VALUES (?, ?, ?, ?, ?, ?, ?)";
         }
         if (!name.equals("position1")) {
             location = worldToDb(location);
@@ -169,7 +191,9 @@ class ZoneStorage implements AutoCloseable {
             stmt.setDouble(2, location.getY());
             stmt.setDouble(3, location.getZ());
             stmt.setString(4, location.getWorld());
-            stmt.setString(5, name);
+            stmt.setDouble(5, location.getPitch());
+            stmt.setDouble(6, location.getYaw());
+            stmt.setString(7, name);
             stmt.execute();
         }
         positionCache.clear();

@@ -10,6 +10,7 @@ import com.tommytony.war.struct.WarLocation;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -104,6 +105,14 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    public void setTeamSpawn(String teamName, WarLocation location) {
+        try {
+            db.setPosition("teamspawn" + teamName, location);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public File getDataFile() {
         return db.getDataStore();
     }
@@ -169,5 +178,35 @@ public class Warzone implements AutoCloseable {
 
     public void setGame(WarGame game) {
         this.game = game;
+    }
+
+    public void setGate(String gateName, WarLocation location) {
+        if (!gateName.equals("autoassign") && getTeamSpawn(gateName) == null) {
+            throw new IllegalArgumentException("Gate must be for an existing team or set to autoassign.");
+        }
+        gates = null;
+        try {
+            db.setPosition("gate" + gateName, location);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<WarLocation, String> gates;
+
+    public Map<WarLocation, String> getGates() {
+        if (gates != null) {
+            return gates;
+        }
+        try {
+            gates = db.getGates();
+            return gates;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void newGame() {
+        throw new IllegalStateException("Warzone disabled.");
     }
 }

@@ -8,7 +8,7 @@ import java.util.UUID;
 /**
  * Stores state for players.
  */
-public abstract class WarPlayer {
+public abstract class WarPlayer extends WarConsole {
     private UUID playerId;
     private ZoneCreationState zoneCreationState;
 
@@ -72,13 +72,6 @@ public abstract class WarPlayer {
      * @param location new location
      */
     public abstract void setLocation(WarLocation location);
-
-    /**
-     * Send the player a message. May contain formatting characters.
-     *
-     * @param message message
-     */
-    public abstract void sendMessage(String message);
 
     /**
      * Get block that the player is currently targeting with their cursor. In Bukkit, limited to 100 blocks.
