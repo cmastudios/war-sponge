@@ -54,11 +54,7 @@ public class ZoneConfigCommand implements CommandCallable {
             StringBuilder properties = new StringBuilder();
             for (ZoneSetting setting : ZoneSetting.values()) {
                 properties.append(setting.name().toLowerCase()).append(" <").append(setting.getDataType().getSimpleName());
-                try {
-                    properties.append("> (").append(zone.getConfig().getObject(setting).toString()).append(")\n");
-                } catch (SQLException e) {
-                    throw new CommandException(Text.of("Failed to load properties for warzone."), e);
-                }
+                properties.append("> (").append(zone.getConfig().getObject(setting).toString()).append(")\n");
             }
             source.sendMessage(Text.of("Properties of warzone `", zone.getName(), "':\n", properties.toString()));
             return CommandResult.success();
@@ -69,12 +65,8 @@ public class ZoneConfigCommand implements CommandCallable {
                 throw new CommandException(Text.of(String.format("Can't find warzone %s.", zoneName)));
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
-            try {
-                source.sendMessage(Text.of(setting.name().toLowerCase(), " <", setting.getDataType().getSimpleName(), "> = ",
-                        zone.getConfig().getObject(setting).toString()));
-            } catch (SQLException e) {
-                throw new CommandException(Text.of("Failed to load properties for warzone."), e);
-            }
+            source.sendMessage(Text.of(setting.name().toLowerCase(), " <", setting.getDataType().getSimpleName(), "> = ",
+                    zone.getConfig().getObject(setting).toString()));
             return CommandResult.empty();
         } else if (argv.length == 3) {
             String zoneName = argv[0];
@@ -84,12 +76,8 @@ public class ZoneConfigCommand implements CommandCallable {
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             String value = argv[2];
-            try {
-                zone.getConfig().setValue(setting, value);
-                source.sendMessage(Text.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
-            } catch (SQLException e) {
-                throw new CommandException(Text.of("Failed to set property for warzone."), e);
-            }
+            zone.getConfig().setValue(setting, value);
+            source.sendMessage(Text.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
             return CommandResult.success();
         } else {
             throw new CommandException(Text.of("Insufficient arguments."));

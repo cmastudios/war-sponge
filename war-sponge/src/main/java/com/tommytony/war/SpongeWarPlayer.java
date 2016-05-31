@@ -20,7 +20,7 @@ class SpongeWarPlayer extends WarPlayer {
     private final WarPlugin plugin;
 
     SpongeWarPlayer(UUID playerId, WarPlugin warPlugin) {
-        super(playerId);
+        super(playerId, warPlugin);
         plugin = warPlugin;
     }
 
@@ -106,5 +106,14 @@ class SpongeWarPlayer extends WarPlayer {
             }
             player.get().sendBlockChange(location.getBlockX(), location.getBlockY(), location.getBlockZ(), state);
         }
+    }
+
+    @Override
+    public String getName() {
+        Optional<Player> player = getPlayer();
+        if (player.isPresent()) {
+            return player.get().getName();
+        }
+        return "MISSINGNO";
     }
 }

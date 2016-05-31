@@ -82,6 +82,9 @@ public class Warzone implements AutoCloseable {
     }
 
     public void setTeleport(WarLocation location) {
+        if (this.getCuboid().contains(location)) {
+            throw new IllegalStateException("Lobby position cannot be set inside of a zone.");
+        }
         try {
             db.setPosition("lobby", location);
         } catch (SQLException e) {
@@ -106,8 +109,19 @@ public class Warzone implements AutoCloseable {
     }
 
     public void setTeamSpawn(String teamName, WarLocation location) {
+        if (!this.getCuboid().contains(location)) {
+            throw new IllegalStateException("Team spawn position must be set inside of a zone.");
+        }
         try {
             db.setPosition("teamspawn" + teamName, location);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteTeam(String teamName) {
+        try {
+            db.deletePosition("teamspawn" + teamName);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -184,9 +198,21 @@ public class Warzone implements AutoCloseable {
         if (!gateName.equals("autoassign") && getTeamSpawn(gateName) == null) {
             throw new IllegalArgumentException("Gate must be for an existing team or set to autoassign.");
         }
+        if (this.getCuboid().contains(location)) {
+            throw new IllegalStateException("Gate position cannot be set inside of a zone.");
+        }
         gates = null;
         try {
             db.setPosition("gate" + gateName, location);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteGate(String gateName) {
+        gates = null;
+        try {
+            db.deletePosition("gate" + gateName);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -207,6 +233,10 @@ public class Warzone implements AutoCloseable {
     }
 
     public void newGame() {
-        throw new IllegalStateException("Warzone disabled.");
+        if (this.getConfig().getBoolean(ZoneSetting.EDITING))
+            throw new IllegalStateException("Warzone disabled.");
+        if (this.getTeams().isEmpty())
+            throw new IllegalStateException("Cannot start a game in a warzone without teams.");
+        setGame(new WarGame(this, plugin));
     }
 }

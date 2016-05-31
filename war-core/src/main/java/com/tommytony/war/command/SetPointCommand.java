@@ -37,15 +37,25 @@ public class SetPointCommand extends WarCommand {
                 throw new CommandUserError("Setting this position requires a team argument.");
             }
             String team = args[2];
-            zone.setTeamSpawn(team, player.getLocation());
-            player.sendMessage(MessageFormat.format("Spawn point for team {0} set to your current location.", team));
+            if (args.length > 3 && args[3].equalsIgnoreCase("-delete")) {
+                zone.deleteTeam(team);
+                player.sendMessage(MessageFormat.format("Team {0} deleted.", team));
+            } else {
+                zone.setTeamSpawn(team, player.getLocation());
+                player.sendMessage(MessageFormat.format("Spawn point for team {0} set to your current location.", team));
+            }
         } else if (object.equalsIgnoreCase("gate")) {
             if (args.length < 3) {
                 throw new CommandUserError("Setting this position requires an argument of either team or autoassign.");
             }
             String team = args[2];
-            zone.setGate(team, player.getLocation());
-            player.sendMessage(MessageFormat.format("Gate for {0} set to your current location.", team));
+            if (args.length > 3 && args[3].equalsIgnoreCase("-delete")) {
+                zone.deleteGate(team);
+                player.sendMessage(MessageFormat.format("Gate {0} deleted.", team));
+            } else {
+                zone.setGate(team, player.getLocation());
+                player.sendMessage(MessageFormat.format("Gate for {0} set to your current location.", team));
+            }
         }
     }
 

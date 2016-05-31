@@ -194,9 +194,16 @@ class ZoneStorage implements AutoCloseable {
             stmt.setDouble(5, location.getPitch());
             stmt.setDouble(6, location.getYaw());
             stmt.setString(7, name);
-            stmt.execute();
+            stmt.executeUpdate();
         }
         positionCache.clear();
+    }
+
+    void deletePosition(String name) throws SQLException {
+        try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM coordinates WHERE name = ?")) {
+            stmt.setString(1, name);
+            stmt.executeUpdate();
+        }
     }
 
     void loadBlocks() throws SQLException {

@@ -68,6 +68,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         this.getCommand("zonecfg").setExecutor(new ZoneConfigCommand(this));
         this.getCommand("savezone").setExecutor(new SaveZoneCommand(this));
         this.getCommand("resetzone").setExecutor(new ResetZoneCommand(this));
+        this.getCommand("setpoint").setExecutor(new SetPointCommand(this));
         this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         try {
             for (String zoneName : config.getZones()) {

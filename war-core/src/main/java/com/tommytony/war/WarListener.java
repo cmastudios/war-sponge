@@ -51,7 +51,7 @@ public class WarListener {
                         Optional<WarGame> game = zone.getGame();
                         if (game.isPresent()) {
                             WarGame.Team team = game.get().getTeam(gateName);
-                            game.get().assign(team);
+                            game.get().assign(player, team);
                         }
                     }
                 });

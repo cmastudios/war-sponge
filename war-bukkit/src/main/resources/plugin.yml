@@ -43,7 +43,7 @@ commands:
   setpoint:
     description: Set a location for a zone, such as a spawn or gate
     usage: /<command> <zone> <lobby/spawn/gate> [team/autoassign]
-    aliases: [setlocation, setloc, warsetpoint]
+    aliases: [point, location]
     permission: war.zone.config
 permissions:
   war.teleport:

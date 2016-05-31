@@ -14,7 +14,7 @@ class BukkitWarPlayer extends WarPlayer {
     private final WarPlugin plugin;
 
     BukkitWarPlayer(UUID playerId, WarPlugin warPlugin) {
-        super(playerId);
+        super(playerId, warPlugin);
         plugin = warPlugin;
     }
 
@@ -64,5 +64,10 @@ class BukkitWarPlayer extends WarPlayer {
         }
         //noinspection deprecation
         getPlayer().sendBlockChange(plugin.getBukkitLocation(location), Material.matchMaterial(blockName), (byte) block.getMeta());
+    }
+
+    @Override
+    public String getName() {
+        return getPlayer().getName();
     }
 }

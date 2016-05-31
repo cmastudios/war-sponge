@@ -54,7 +54,7 @@ public class ZoneConfig {
      * @return the value of the setting or the default if not found.
      * @throws SQLException
      */
-    public int getInt(ZoneSetting setting) throws SQLException {
+    public int getInt(ZoneSetting setting) {
         try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
             stmt.setString(1, setting.name());
             try (ResultSet result = stmt.executeQuery()) {
@@ -69,6 +69,8 @@ public class ZoneConfig {
                     return (Integer) setting.getDefaultValue();
                 }
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -78,7 +80,7 @@ public class ZoneConfig {
      * @param value New value to add or replace.
      * @throws SQLException
      */
-    public void setInt(ZoneSetting setting, int value) throws SQLException {
+    public void setInt(ZoneSetting setting, int value) {
         boolean exists;
         String sql = "INSERT INTO %s (value, option) VALUES (?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
@@ -86,6 +88,8 @@ public class ZoneConfig {
             try (ResultSet result = stmt.executeQuery()) {
                 exists = result.next();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
         if (exists) {
             sql = "UPDATE %s SET value = ? WHERE option = ?";
@@ -94,19 +98,68 @@ public class ZoneConfig {
             stmt.setInt(1, value);
             stmt.setString(2, setting.name());
             stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public Object getObject(ZoneSetting setting) throws SQLException {
+    public boolean getBoolean(ZoneSetting setting) {
+        try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
+            stmt.setString(1, setting.name());
+            try (ResultSet result = stmt.executeQuery()) {
+                if (result.next()) {
+                    // found an override for this config level
+                    return Boolean.parseBoolean(result.getString(1));
+                } else if (parent != null) {
+                    // look for it in zone/global configs; will be recursive upwards
+                    return parent.getBoolean(setting);
+                } else {
+                    // the hard-coded value for fallback
+                    return (Boolean) setting.getDefaultValue();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setBoolean(ZoneSetting setting, boolean value) {
+        boolean exists;
+        String sql = "INSERT INTO %s (value, option) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
+            stmt.setString(1, setting.name());
+            try (ResultSet result = stmt.executeQuery()) {
+                exists = result.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        if (exists) {
+            sql = "UPDATE %s SET value = ? WHERE option = ?";
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(String.format(sql, table))) {
+            stmt.setString(1, Boolean.toString(value));
+            stmt.setString(2, setting.name());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Object getObject(ZoneSetting setting) {
         if (setting.getDataType() == Integer.class) {
             return this.getInt(setting);
+        } else if (setting.getDataType() == Boolean.class) {
+            return this.getBoolean(setting);
         }
         return null;
     }
 
-    public void setValue(ZoneSetting setting, String value) throws SQLException {
+    public void setValue(ZoneSetting setting, String value) {
         if (setting.getDataType() == Integer.class) {
             setInt(setting, Integer.parseInt(value));
+        } else if (setting.getDataType() == Boolean.class) {
+            setBoolean(setting, Boolean.parseBoolean(value));
         }
     }
 }

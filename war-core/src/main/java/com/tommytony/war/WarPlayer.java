@@ -9,16 +9,19 @@ import java.util.UUID;
  * Stores state for players.
  */
 public abstract class WarPlayer extends WarConsole {
-    private UUID playerId;
+    private final UUID playerId;
+    private final ServerAPI plugin;
     private ZoneCreationState zoneCreationState;
 
     /**
      * Construct a WarPlayer. This instance is valid for as long as the plugin is loaded.
      *
      * @param playerId Unique ID of the player.
+     * @param plugin War plugin.
      */
-    public WarPlayer(UUID playerId) {
+    public WarPlayer(UUID playerId, ServerAPI plugin) {
         this.playerId = playerId;
+        this.plugin = plugin;
     }
 
     /**
@@ -50,6 +53,11 @@ public abstract class WarPlayer extends WarConsole {
 
     UUID getPlayerId() {
         return playerId;
+    }
+
+    public boolean isPlayingWar() {
+        return plugin.getZones().values().stream()
+                .filter(z -> z.getGame().isPresent() && z.getGame().get().isPlaying(this)).count() > 0;
     }
 
     /**
@@ -94,6 +102,13 @@ public abstract class WarPlayer extends WarConsole {
      * @param block    block data
      */
     public abstract void setLocalBlock(WarLocation location, WarBlock block);
+
+    /**
+     * Get the player's name.
+     *
+     * @return name
+     */
+    public abstract String getName();
 
     public static class ZoneCreationState {
         private final String zoneName;
