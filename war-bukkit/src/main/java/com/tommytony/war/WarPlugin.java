@@ -121,7 +121,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
 
     public Location getBukkitLocation(WarLocation location) {
         World world = this.getServer().getWorld(location.getWorld());
-        return new Location(world, location.getX(), location.getY(), location.getZ(), (float) location.getPitch(), (float) location.getYaw());
+        return new Location(world, location.getX(), location.getY(), location.getZ(), (float) location.getYaw(), (float) location.getPitch());
     }
 
     @Override

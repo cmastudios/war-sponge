@@ -151,7 +151,7 @@ class ZoneStorage implements AutoCloseable {
     Map<WarLocation, String> getGates() throws SQLException {
         Map<WarLocation, String> gates = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT x, y, z, world, name FROM coordinates")) {
+                "SELECT x, y, z, pitch, yaw, world, name FROM coordinates")) {
             try (ResultSet resultSet = stmt.executeQuery()) {
                 while (resultSet.next()) {
                     String name = resultSet.getString("name");
