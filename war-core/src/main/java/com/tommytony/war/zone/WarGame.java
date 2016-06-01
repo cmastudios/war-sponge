@@ -124,7 +124,12 @@ public class WarGame {
         warzone.reset();
     }
 
-    private void removePlayer(WarPlayer p) {
+    public void removePlayer(WarPlayer p) {
+        removePlayerSilent(p);
+        this.broadcast(MessageFormat.format("Player {0} left team {1}.", p.getName(), getPlayerTeam(p).getName()));
+    }
+
+    private void removePlayerSilent(WarPlayer p) {
         getPlayerTeam(p).players.remove(p);
         players.remove(p);
         p.setLocation(warzone.getTeleport());

@@ -82,6 +82,7 @@ public class WarPlugin implements ServerAPI {
         game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave", "zs");
         game.getCommandManager().register(this, new ResetZoneCommand(this), "resetzone", "reloadzone", "zr");
         game.getCommandManager().register(this, new SetPointCommand(this), "point", "location");
+        game.getCommandManager().register(this, new LeaveCommand(this), "warleave");
         game.getEventManager().registerListeners(this, new PlayerListener(this));
 
         if (!dataDir.exists() && !dataDir.mkdirs())

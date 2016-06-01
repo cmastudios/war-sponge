@@ -45,6 +45,10 @@ commands:
     usage: /<command> <zone> <lobby/spawn/gate> [team/autoassign]
     aliases: [point, location]
     permission: war.zone.config
+  leave:
+    description: Leave an active game
+    usage: /<command>
+    aliases: [warleave]
 permissions:
   war.teleport:
     description: Required to teleport to a warzone

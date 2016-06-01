@@ -64,11 +64,12 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         this.getCommand("warzone").setExecutor(new WarzoneCommand(this));
         this.getCommand("warcfg").setExecutor(new WarConfigCommand(this));
         this.getCommand("setzone").setExecutor(new SetZoneCommand(this));
-        this.getCommand("delzone").setExecutor(new com.tommytony.war.bukkit.command.DeleteZoneCommand(this));
+        this.getCommand("delzone").setExecutor(new DeleteZoneCommand(this));
         this.getCommand("zonecfg").setExecutor(new ZoneConfigCommand(this));
         this.getCommand("savezone").setExecutor(new SaveZoneCommand(this));
         this.getCommand("resetzone").setExecutor(new ResetZoneCommand(this));
         this.getCommand("setpoint").setExecutor(new SetPointCommand(this));
+        this.getCommand("leave").setExecutor(new LeaveCommand(this));
         this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         try {
             for (String zoneName : config.getZones()) {
