@@ -2,6 +2,7 @@ package com.tommytony.war.sponge.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneSetting;
 import org.spongepowered.api.command.CommandCallable;
@@ -10,7 +11,6 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,6 +76,10 @@ public class ZoneConfigCommand implements CommandCallable {
             }
             ZoneSetting setting = ZoneSetting.valueOf(argv[1].toUpperCase());
             String value = argv[2];
+            Optional<WarGame> game = zone.getGame();
+            if (setting == ZoneSetting.EDITING && game.isPresent()) {
+                game.get().forceEndGame();
+            }
             zone.getConfig().setValue(setting, value);
             source.sendMessage(Text.of("Setting `", setting.name().toLowerCase(), "' has been successfully set to ", value));
             return CommandResult.success();

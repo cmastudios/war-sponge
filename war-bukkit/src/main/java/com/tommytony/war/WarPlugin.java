@@ -2,6 +2,7 @@ package com.tommytony.war;
 
 import com.tommytony.war.bukkit.command.*;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.item.WarItem;
 import com.tommytony.war.listener.PlayerListener;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
@@ -331,4 +332,21 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         }
     }
 
+    public WarItem getWarItem(ItemStack itemStack) {
+        String name = itemStack.getType().name();
+        int count = itemStack.getAmount();
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("item", itemStack);
+        return new WarItem(name, config.saveToString(), count);
+    }
+
+    public ItemStack getBukkitItem(WarItem warItem) {
+        YamlConfiguration config = new YamlConfiguration();
+        try {
+            config.loadFromString(warItem.getSerialized());
+        } catch (InvalidConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+        return (ItemStack) config.get("item");
+    }
 }

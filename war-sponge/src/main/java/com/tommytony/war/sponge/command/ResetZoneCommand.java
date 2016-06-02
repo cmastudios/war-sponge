@@ -2,6 +2,7 @@ package com.tommytony.war.sponge.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -29,7 +30,12 @@ public class ResetZoneCommand implements CommandCallable {
                 throw new CommandException(Text.of(String.format("Can't find zone %s", zoneName)));
             }
             source.sendMessage(Text.of(String.format("Reloading zone %s...", zoneName)));
-            zone.reset();
+            Optional<WarGame> game = zone.getGame();
+            if (game.isPresent()) {
+                game.get().endRound();
+            } else {
+                zone.reset();
+            }
             int affected = (int) Math.floor(zone.getCuboid().getSize());
             source.sendMessage(Text.of(String.format("Reloaded %d blocks in zone %s.", affected, zoneName)));
             return CommandResult.builder().affectedBlocks(affected).build();

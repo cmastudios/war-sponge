@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 
 public class PlayerListener implements Listener {
@@ -32,7 +32,21 @@ public class PlayerListener implements Listener {
         if (!(event.getEntity() instanceof Player)) {
             return;
         }
-        Player player = (Player) event.getEntity();
+        if (!(event.getDamager() instanceof Player)) {
+            return;
+        }
+        WarPlayer defender = plugin.getWarPlayer((Player) event.getEntity());
+        WarPlayer attacker = plugin.getWarPlayer((Player) event.getDamager());
+        boolean b = plugin.getListener().handleCombat(attacker, defender);
+        event.setCancelled(b);
+    }
 
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        WarPlayer player = plugin.getWarPlayer(event.getEntity());
+        boolean b = plugin.getListener().handleDeath(player, event.getDeathMessage());
+        if (b) {
+            event.setDeathMessage("");
+        }
     }
 }

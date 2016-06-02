@@ -32,6 +32,10 @@ public class WarListener {
                     .filter(warzone -> warzone.getCuboid().contains(from)).findFirst().orElse(null)
                     .getListener().handlePlayerMovementInWarzone(player, from, to);
         } else { // interaction outside of a zone
+            if (player.isPlayingWar()) { // teleport player back into warzone
+                WarGame.Team playerTeam = player.getWarzone().getGame().orElseThrow(IllegalStateException::new).getPlayerTeam(player);
+                player.setLocation(player.getWarzone().getTeamSpawn(playerTeam.getName()));
+            }
             for (Warzone zone : plugin.getZones().values()) {
                 // check all gates in each war zone
                 zone.getGates().keySet().stream().filter(loc -> to.getBlockLoc().equals(loc.getBlockLoc())).forEach(loc -> {
@@ -56,6 +60,28 @@ public class WarListener {
                     }
                 });
             }
+        }
+        return false;
+    }
+
+    public boolean handleCombat(WarPlayer attacker, WarPlayer defender) {
+        if (attacker.isPlayingWar() && defender.isPlayingWar()) {
+            Warzone attackerWarzone = attacker.getWarzone();
+            Warzone defenderWarzone = defender.getWarzone();
+            if (attackerWarzone != defenderWarzone) {
+                return true; // can't attack players in other warzones
+            }
+            return attackerWarzone.getListener().handleCombat(attacker, defender);
+        }
+        if (attacker.isPlayingWar() || defender.isPlayingWar()) {
+            return true; // can't attack from outside a warzone
+        }
+        return false; // players not playing war, do not manage
+    }
+
+    public boolean handleDeath(WarPlayer player, String deathMessage) {
+        if (player.isPlayingWar()) {
+            return player.getWarzone().getListener().handleDeath(player, deathMessage);
         }
         return false;
     }

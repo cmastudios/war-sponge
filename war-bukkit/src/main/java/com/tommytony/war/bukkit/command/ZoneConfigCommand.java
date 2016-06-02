@@ -2,6 +2,7 @@ package com.tommytony.war.bukkit.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneSetting;
 import org.bukkit.command.Command;
@@ -9,9 +10,9 @@ import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 
 public class ZoneConfigCommand implements TabExecutor {
     private final WarPlugin plugin;
@@ -70,6 +71,10 @@ public class ZoneConfigCommand implements TabExecutor {
                 throw new CommandException(String.format("Can't find warzone %s.", zoneName));
             }
             ZoneSetting setting = ZoneSetting.valueOf(args[1].toUpperCase());
+            Optional<WarGame> game = zone.getGame();
+            if (setting == ZoneSetting.EDITING && game.isPresent()) {
+                game.get().forceEndGame();
+            }
             String value = args[2];
             zone.getConfig().setValue(setting, value);
             sender.sendMessage(MessageFormat.format("Setting `{0}'' has been successfully set to {1}.", setting.name().toLowerCase(), value));

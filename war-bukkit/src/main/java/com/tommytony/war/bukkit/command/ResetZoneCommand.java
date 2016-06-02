@@ -2,6 +2,7 @@ package com.tommytony.war.bukkit.command;
 
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.WarPlugin;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandException;
@@ -9,6 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ResetZoneCommand implements TabExecutor {
     private final WarPlugin plugin;
@@ -26,7 +28,12 @@ public class ResetZoneCommand implements TabExecutor {
                 throw new CommandException(String.format("Can't find zone %s", zoneName));
             }
             sender.sendMessage(String.format("Reloading zone %s...", zoneName));
-            zone.reset();
+            Optional<WarGame> game = zone.getGame();
+            if (game.isPresent()) {
+                game.get().endRound();
+            } else {
+                zone.reset();
+            }
             int affected = (int) Math.floor(zone.getCuboid().getSize());
             sender.sendMessage(String.format("Reloaded %d blocks in zone %s.", affected, zoneName));
             return true;

@@ -1,7 +1,10 @@
 package com.tommytony.war.zone;
 
+import com.google.common.collect.ImmutableList;
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarPlayer;
+import com.tommytony.war.item.WarColor;
+import com.tommytony.war.item.WarItem;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -13,6 +16,7 @@ public class WarGame {
     private List<WarPlayer> players;
     private List<Team> teams;
     private List<Attack> attacks;
+    private Map<WarPlayer, WarPlayer.PlayerState> inventories;
     private int round;
 
     WarGame(Warzone warzone, ServerAPI plugin) {
@@ -22,6 +26,8 @@ public class WarGame {
         teams = new ArrayList<>();
         teams.addAll(warzone.getTeams().stream().map(Team::new).collect(Collectors.toList()));
         round = 0;
+        attacks = new ArrayList<>();
+        inventories = new HashMap<>();
     }
 
     public Team getTeam(String teamName) {
@@ -54,9 +60,16 @@ public class WarGame {
         if (players.size() >= warzone.getConfig().getInt(ZoneSetting.MAXPLAYERS)) {
             throw new IllegalStateException("Warzone is full.");
         }
+        if (isPlaying(player)) {
+            throw new IllegalStateException("Already playing in this zone.");
+        }
+        if (player.isPlayingWar()) {
+            throw new IllegalStateException("Already playing in another zone.");
+        }
         players.add(player);
         team.players.add(player);
-        player.setLocation(warzone.getTeamSpawn(team.name));
+        savePlayerState(player);
+        resetPlayerState(player);
         StringBuilder teamPlayers = new StringBuilder();
         List<WarPlayer> players1 = team.players;
         for (int i = 0, players1Size = players1.size(); i < players1Size; i++) {
@@ -69,31 +82,27 @@ public class WarGame {
                 team.getName(), team.getPoints(), warzone.getConfig().getInt(ZoneSetting.MAXPOINTS), teamPlayers.toString()));
     }
 
+    private void savePlayerState(WarPlayer player) {
+        inventories.put(player, player.getState());
+    }
+
+    void resetPlayerState(WarPlayer player) {
+        Team team = getPlayerTeam(player);
+        WarPlayer.PlayerState newState = new WarPlayer.PlayerState(WarPlayer.WarGameMode.SURVIVAL, new WarItem[]{},
+                null, null, null, null, 20, 0, 20, 20, 0, 0, false);
+        player.setState(newState);
+        player.setLocation(warzone.getTeamSpawn(team.getName()));
+    }
+
+    private void restorePlayerState(WarPlayer player) {
+        player.setState(inventories.get(player));
+    }
+
     public void broadcast(String message) {
         players.stream().forEach(p -> p.sendMessage(message));
     }
 
-    public void onDeath(WarPlayer player) {
-        Team playerTeam = getPlayerTeam(player);
-        Optional<Attack> first = attacks.stream().filter(a -> a.defender == player).filter(a -> System.currentTimeMillis() - a.time < 3000).findFirst();
-        if (first.isPresent()) {
-            Team beneficiary = getPlayerTeam(first.get().attacker);
-            beneficiary.addPoints(1);
-            broadcast(MessageFormat.format("Team {0} gains 1 point.", beneficiary.getName()));
-        }
-        checkForEndRound();
-    }
-
-    public void onAttackByPlayer(WarPlayer attacker, WarPlayer defender) {
-        for (Iterator<Attack> iterator = attacks.iterator(); iterator.hasNext(); ) {
-            Attack attack = iterator.next();
-            if (attack.defender == defender)
-                iterator.remove();
-        }
-        attacks.add(new Attack(attacker, defender, System.currentTimeMillis()));
-    }
-
-    public void checkForEndRound() {
+    void checkForEndRound() {
         for (Team team : teams) {
             if (team.getPoints() >= warzone.getConfig().getInt(ZoneSetting.MAXPOINTS)) {
                 broadcast(MessageFormat.format("Team {0} wins!", team.getName()));
@@ -104,7 +113,7 @@ public class WarGame {
     }
 
     public void endRound() {
-        boolean gameOver = round >= warzone.getConfig().getInt(ZoneSetting.MAXROUNDS);
+        boolean gameOver = round++ >= warzone.getConfig().getInt(ZoneSetting.MAXROUNDS);
         StringBuilder builder = new StringBuilder();
         if (gameOver) {
             builder.append("Game over!");
@@ -119,20 +128,40 @@ public class WarGame {
         }
         broadcast(builder.toString());
         if (gameOver) {
-            players.stream().forEach(this::removePlayer);
+            ImmutableList.copyOf(players).forEach(this::removePlayer);
         }
         warzone.reset();
+        players.forEach(this::resetPlayerState);
     }
 
     public void removePlayer(WarPlayer p) {
+        String playerName = p.getName();
+        String teamName = getPlayerTeam(p).getName();
         removePlayerSilent(p);
-        this.broadcast(MessageFormat.format("Player {0} left team {1}.", p.getName(), getPlayerTeam(p).getName()));
+        this.broadcast(MessageFormat.format("Player {0} left team {1}.", playerName, teamName));
     }
 
     private void removePlayerSilent(WarPlayer p) {
         getPlayerTeam(p).players.remove(p);
         players.remove(p);
         p.setLocation(warzone.getTeleport());
+        restorePlayerState(p);
+        if (players.isEmpty()) {
+            warzone.setGame(null); // kill ourselves
+        }
+    }
+
+    public void forceEndGame() {
+        round = Integer.MAX_VALUE;
+        endRound();
+    }
+
+    List<Attack> getAttacks() {
+        return attacks;
+    }
+
+    void addAttack(WarPlayer attacker, WarPlayer defender) {
+        attacks.add(new Attack(attacker, defender, System.currentTimeMillis()));
     }
 
     public class Team {
@@ -140,7 +169,7 @@ public class WarGame {
         private List<WarPlayer> players;
         private int points;
 
-        public Team(String name) {
+        Team(String name) {
             this.name = name;
             players = new ArrayList<>();
             points = 0;
@@ -150,12 +179,24 @@ public class WarGame {
             return name;
         }
 
-        public int getPoints() {
+        int getPoints() {
             return points;
         }
 
-        public void addPoints(int i) {
+        void addPoints(int i) {
             points += i;
+        }
+
+        public String getColor() {
+            try {
+                return WarColor.valueOf(name.toUpperCase()).getCode();
+            } catch (IllegalArgumentException e) {
+                return "";
+            }
+        }
+
+        public String getDisplayName() {
+            return getColor() + getName() + WarColor.WHITE.getCode();
         }
     }
 
@@ -168,5 +209,18 @@ public class WarGame {
             this.defender = defender;
             this.time = time;
         }
+
+        WarPlayer getDefender() {
+            return defender;
+        }
+
+        long getTime() {
+            return time;
+        }
+
+        WarPlayer getAttacker() {
+            return attacker;
+        }
     }
+
 }

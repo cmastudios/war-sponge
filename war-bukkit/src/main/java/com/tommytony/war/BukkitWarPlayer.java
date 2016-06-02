@@ -1,13 +1,18 @@
 package com.tommytony.war;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 class BukkitWarPlayer extends WarPlayer {
@@ -70,4 +75,70 @@ class BukkitWarPlayer extends WarPlayer {
     public String getName() {
         return getPlayer().getName();
     }
+
+    @Override
+    public PlayerState getState() {
+        ImmutableList.Builder<WarItem> builder = ImmutableList.builder();
+        Arrays.stream(getPlayer().getInventory().getContents()).filter(itemStack -> itemStack != null).forEach(itemStack -> builder.add(plugin.getWarItem(itemStack)));
+        int gameMode = 0;
+        switch (getPlayer().getGameMode()) {
+            case CREATIVE:
+                gameMode = WarGameMode.CREATIVE;
+                break;
+            case SURVIVAL:
+                gameMode = WarGameMode.SURVIVAL;
+                break;
+            case ADVENTURE:
+                gameMode = WarGameMode.ADVENTURE;
+                break;
+            case SPECTATOR:
+                gameMode = WarGameMode.SURVIVAL;
+                break;
+        }
+        return new PlayerState(gameMode,
+                builder.build().toArray(new WarItem[0]),
+                null, null, null, null,
+                getPlayer().getHealth(),
+                getPlayer().getExhaustion(),
+                getPlayer().getSaturation(),
+                getPlayer().getFoodLevel(),
+                getPlayer().getLevel(),
+                getPlayer().getExp(),
+                getPlayer().getAllowFlight());
+    }
+
+    @Override
+    public void setState(PlayerState state) {
+        getPlayer().closeInventory();
+        switch (state.getGameMode()) {
+            case WarGameMode.SURVIVAL:
+                getPlayer().setGameMode(GameMode.SURVIVAL);
+                break;
+            case WarGameMode.CREATIVE:
+                getPlayer().setGameMode(GameMode.CREATIVE);
+                break;
+            case WarGameMode.ADVENTURE:
+                getPlayer().setGameMode(GameMode.ADVENTURE);
+                break;
+            default:
+                break;
+        }
+        ImmutableList.Builder<ItemStack> builder = ImmutableList.builder();
+        Arrays.stream(state.getInventory()).forEach(warItem -> builder.add(plugin.getBukkitItem(warItem)));
+        getPlayer().getInventory().clear();
+        getPlayer().getInventory().setContents(builder.build().toArray(new ItemStack[0]));
+        getPlayer().setHealth(state.getHealth());
+        getPlayer().setExhaustion((float) state.getExhaustion());
+        getPlayer().setSaturation((float) state.getSaturation());
+        getPlayer().setFoodLevel((int) state.getHunger());
+        getPlayer().setLevel((int) state.getLevel());
+        getPlayer().setExp((float) state.getExperience());
+        getPlayer().setAllowFlight(state.isFlying());
+    }
+
+    @Override
+    public WarItem getItemInHand() {
+        return plugin.getWarItem(getPlayer().getInventory().getItemInMainHand());
+    }
+
 }

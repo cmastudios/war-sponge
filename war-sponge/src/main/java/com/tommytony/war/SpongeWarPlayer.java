@@ -1,12 +1,19 @@
 package com.tommytony.war;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.ImmutableList;
+import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.data.DataContainer;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameMode;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.blockray.BlockRay;
 import org.spongepowered.api.util.blockray.BlockRayHit;
@@ -85,7 +92,6 @@ class SpongeWarPlayer extends WarPlayer {
     @Override
     public void setLocalBlock(WarLocation location, WarBlock block) {
         Optional<Player> player = getPlayer();
-        Location<World> spongeLocation = plugin.getSpongeLocation(location);
         if (player.isPresent()) {
             BlockState state;
             BlockType type;
@@ -115,5 +121,36 @@ class SpongeWarPlayer extends WarPlayer {
             return player.get().getName();
         }
         return "MISSINGNO";
+    }
+
+    @Override
+    public PlayerState getState() {
+        Player player = getPlayer().orElseThrow(IllegalStateException::new);
+        ImmutableList.Builder<WarItem> builder = ImmutableList.builder();
+        for (Inventory inventory : player.getInventory().slots()) {
+            Optional<ItemStack> peek = inventory.peek();
+            if (peek.isPresent()) {
+                builder.add(plugin.getWarItem(peek.get()));
+            }
+        }
+        int gameMode = 0;
+        GameMode gameMode1 = player.getGameModeData().getValue(Keys.GAME_MODE).orElseThrow(IllegalStateException::new).get();
+        if (gameMode1 == GameModes.CREATIVE)
+            gameMode = WarGameMode.CREATIVE;
+//        return new PlayerState(gameMode, (WarItem[]) builder.build().toArray(),
+//                null, null, null, null,
+//                player.getHealthData().getValue(Keys.HEALTH).orElseThrow(IllegalStateException::new).get(),
+//                player.getS);
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public void setState(PlayerState state) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public WarItem getItemInHand() {
+        return plugin.getWarItem(getPlayer().orElseThrow(IllegalStateException::new).getItemInHand().orElse(null));
     }
 }

@@ -2,6 +2,7 @@ package com.tommytony.war;
 
 import com.google.inject.Inject;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.item.WarItem;
 import com.tommytony.war.listener.PlayerListener;
 import com.tommytony.war.sponge.command.*;
 import com.tommytony.war.struct.WarBlock;
@@ -25,6 +26,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -289,5 +291,9 @@ public class WarPlugin implements ServerAPI {
 
     public WarListener getListener() {
         return listener;
+    }
+
+    public WarItem getWarItem(ItemStack itemStack) {
+        return new WarItem(itemStack.getItem().getName(), translator.translateData(itemStack.toContainer()), itemStack.getQuantity());
     }
 }
