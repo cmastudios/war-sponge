@@ -9,6 +9,7 @@ import com.tommytony.war.struct.WarLocation;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +25,7 @@ public class Warzone implements AutoCloseable {
     private final ServerAPI plugin;
     private final ZoneListener listener;
     private WarGame game;
+    private Map<WarLocation, String> gates;
 
     /**
      * Load or create a war zone from the war settings store.
@@ -74,7 +76,7 @@ public class Warzone implements AutoCloseable {
             if (db.hasPosition("lobby")) {
                 return db.getPosition("lobby");
             } else {
-                throw new RuntimeException("No teleport location found for zone " + name);
+                throw new IllegalStateException(MessageFormat.format("No lobby found for zone {0}.", name));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -217,8 +219,6 @@ public class Warzone implements AutoCloseable {
             throw new RuntimeException(e);
         }
     }
-
-    private Map<WarLocation, String> gates;
 
     public Map<WarLocation, String> getGates() {
         if (gates != null) {

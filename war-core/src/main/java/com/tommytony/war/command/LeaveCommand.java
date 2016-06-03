@@ -36,4 +36,34 @@ public class LeaveCommand extends WarCommand {
     List<String> handleTab(WarConsole sender, String[] args) {
         return ImmutableList.of();
     }
+
+    @Override
+    public String getName() {
+        return "leave";
+    }
+
+    @Override
+    public List<String> getAliases() {
+        return ImmutableList.of("warleave");
+    }
+
+    @Override
+    public String getTagline() {
+        return "Leave an active game.";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Returns original player state and teleports to zone lobby.";
+    }
+
+    @Override
+    public String getUsage() {
+        return "";
+    }
+
+    @Override
+    public String getPermission() {
+        return "war.teleport";
+    }
 }

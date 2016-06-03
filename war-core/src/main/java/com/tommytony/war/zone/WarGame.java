@@ -89,7 +89,7 @@ public class WarGame {
     void resetPlayerState(WarPlayer player) {
         Team team = getPlayerTeam(player);
         WarPlayer.PlayerState newState = new WarPlayer.PlayerState(WarPlayer.WarGameMode.SURVIVAL, new WarItem[]{},
-                null, null, null, null, 20, 0, 20, 20, 0, 0, false);
+                null, null, null, null, 20, 0, 0, 20, 0, 0, false);
         player.setState(newState);
         player.setLocation(warzone.getTeamSpawn(team.getName()));
     }

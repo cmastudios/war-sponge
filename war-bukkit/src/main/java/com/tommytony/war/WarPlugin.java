@@ -1,6 +1,5 @@
 package com.tommytony.war;
 
-import com.tommytony.war.bukkit.command.*;
 import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.listener.PlayerListener;
@@ -33,6 +32,7 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     private HashMap<String, Warzone> zones;
     private HashMap<UUID, BukkitWarPlayer> players;
     private WarListener listener;
+    private BukkitCommandManager cmdManager;
 
     @Override
     public void onDisable() {
@@ -62,15 +62,6 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         zones = new HashMap<>();
         players = new HashMap<>();
         listener = new WarListener(this);
-        this.getCommand("warzone").setExecutor(new WarzoneCommand(this));
-        this.getCommand("warcfg").setExecutor(new WarConfigCommand(this));
-        this.getCommand("setzone").setExecutor(new SetZoneCommand(this));
-        this.getCommand("delzone").setExecutor(new DeleteZoneCommand(this));
-        this.getCommand("zonecfg").setExecutor(new ZoneConfigCommand(this));
-        this.getCommand("savezone").setExecutor(new SaveZoneCommand(this));
-        this.getCommand("resetzone").setExecutor(new ResetZoneCommand(this));
-        this.getCommand("setpoint").setExecutor(new SetPointCommand(this));
-        this.getCommand("leave").setExecutor(new LeaveCommand(this));
         this.getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
         try {
             for (String zoneName : config.getZones()) {
@@ -81,6 +72,8 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        cmdManager = new BukkitCommandManager(this);
+        cmdManager.registerCommands();
     }
 
     @Override

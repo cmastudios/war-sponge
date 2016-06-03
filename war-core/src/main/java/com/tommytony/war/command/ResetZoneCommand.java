@@ -3,13 +3,15 @@ package com.tommytony.war.command;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarConsole;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 
-public class DeleteZoneCommand extends WarCommand {
-    public DeleteZoneCommand(ServerAPI plugin) {
+public class ResetZoneCommand extends WarCommand {
+    public ResetZoneCommand(ServerAPI plugin) {
         super(plugin);
     }
 
@@ -23,8 +25,16 @@ public class DeleteZoneCommand extends WarCommand {
         if (zone == null) {
             throw new CommandUserError(MessageFormat.format("Warzone {0} not found.", zoneName));
         }
-        String output = getPlugin().deleteZone(zoneName);
-        sender.sendMessage(MessageFormat.format("Deleted warzone {0}, moved data file to {1}.", zone, output));
+        sender.sendMessage(MessageFormat.format("Reloading zone {0}...", zoneName));
+        Optional<WarGame> game = zone.getGame();
+        if (game.isPresent()) {
+            game.get().endRound();
+        } else {
+            zone.reset();
+        }
+        int affected = (int) Math.floor(zone.getCuboid().getSize());
+        sender.sendMessage(MessageFormat.format("Reloaded {0} blocks in zone {1}.", affected, zoneName));
+
     }
 
     @Override
@@ -43,22 +53,22 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getName() {
-        return "deletezone";
+        return "resetzone";
     }
 
     @Override
     public List<String> getAliases() {
-        return ImmutableList.of("delzone");
+        return ImmutableList.of();
     }
 
     @Override
     public String getTagline() {
-        return "Delete a warzone.";
+        return "Reset and reload a zone.";
     }
 
     @Override
     public String getDescription() {
-        return "Resets and unloads the warzone from the server, and moves the zone file to War's trash folder.";
+        return "This command will either reset the zone blocks if empty, or end the current round if a game is active (which will reset the blocks).";
     }
 
     @Override
@@ -68,6 +78,6 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getPermission() {
-        return "war.zone.delete";
+        return "war.zone.reset";
     }
 }

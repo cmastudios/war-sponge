@@ -3,28 +3,42 @@ package com.tommytony.war.command;
 import com.google.common.collect.ImmutableList;
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarConsole;
+import com.tommytony.war.WarPlayer;
 import com.tommytony.war.zone.Warzone;
 
 import java.text.MessageFormat;
 import java.util.List;
 
-public class DeleteZoneCommand extends WarCommand {
-    public DeleteZoneCommand(ServerAPI plugin) {
+public class TeleportZoneCommand extends WarCommand {
+    public TeleportZoneCommand(ServerAPI plugin) {
         super(plugin);
     }
 
     @Override
     void handleCommand(WarConsole sender, String[] args) {
-        if (args.length != 1) {
-            throw new InvalidArgumentsError();
+        if (args.length == 0) {
+            StringBuilder zones = new StringBuilder();
+            boolean first = true;
+            for (String zoneName : getPlugin().getZones().keySet()) {
+                if (!first) {
+                    zones.append(", ");
+                }
+                first = false;
+                zones.append(zoneName);
+            }
+            sender.sendMessage(MessageFormat.format("Zones: {0}", zones));
+            return;
+        }
+        if (!(sender instanceof WarPlayer)) {
+            throw new NotPlayerError();
         }
         String zoneName = args[0];
         Warzone zone = getPlugin().getZone(zoneName);
         if (zone == null) {
-            throw new CommandUserError(MessageFormat.format("Warzone {0} not found.", zoneName));
+            throw new CommandUserError(MessageFormat.format("Zone {0} not found.", zoneName));
         }
-        String output = getPlugin().deleteZone(zoneName);
-        sender.sendMessage(MessageFormat.format("Deleted warzone {0}, moved data file to {1}.", zone, output));
+        WarPlayer player = (WarPlayer) sender;
+        player.setLocation(zone.getTeleport());
     }
 
     @Override
@@ -43,22 +57,22 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getName() {
-        return "deletezone";
+        return "warzone";
     }
 
     @Override
     public List<String> getAliases() {
-        return ImmutableList.of("delzone");
+        return ImmutableList.of("zone");
     }
 
     @Override
     public String getTagline() {
-        return "Delete a warzone.";
+        return "Teleport to a warzone.";
     }
 
     @Override
     public String getDescription() {
-        return "Resets and unloads the warzone from the server, and moves the zone file to War's trash folder.";
+        return "With no arguments, lists available zones. With one argument, teleports player to the zone's lobby.";
     }
 
     @Override
@@ -68,6 +82,6 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getPermission() {
-        return "war.zone.delete";
+        return "war.teleport";
     }
 }

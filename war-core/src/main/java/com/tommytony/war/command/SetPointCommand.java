@@ -72,4 +72,38 @@ public class SetPointCommand extends WarCommand {
             return ImmutableList.of();
         }
     }
+
+    @Override
+    public String getName() {
+        return "setpoint";
+    }
+
+    @Override
+    public List<String> getAliases() {
+        return ImmutableList.of("point", "location");
+    }
+
+    @Override
+    public String getTagline() {
+        return "Set a location for a zone.";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Location types: lobby, spawn, or gate.\n" +
+                "Set the location for lobby to the place where players will spawn when they teleport to the warzone. Usually a platform overlooking the zone, with gates is best.\n" +
+                "Setting a spawn requires a parameter of team name and creates that team.\n" +
+                "A gate requires a parameter of team or autoassign, which will randomly assign players to teams.\n" +
+                "Using -delete after a spawn or gate will delete the team or the gate respectively.";
+    }
+
+    @Override
+    public String getUsage() {
+        return "<zone> <type> [team] [-delete]";
+    }
+
+    @Override
+    public String getPermission() {
+        return "war.zone.config";
+    }
 }

@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.tommytony.war.item.WarEntity;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.listener.PlayerListener;
-import com.tommytony.war.sponge.command.*;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -58,6 +57,7 @@ public class WarPlugin implements ServerAPI {
     private YamlTranslator translator;
     private HashMap<UUID, SpongeWarPlayer> players;
     private WarListener listener;
+    private SpongeCommandManager cmdManager;
 
     @Listener
     public void onConstruction(GameConstructionEvent event) throws InstantiationException {
@@ -76,15 +76,8 @@ public class WarPlugin implements ServerAPI {
     @Listener
     public void onServerStarted(GameStartedServerEvent event) throws FileNotFoundException, SQLException {
         // register commands
-        game.getCommandManager().register(this, new WarzoneCommand(this), "warzone", "zone");
-        game.getCommandManager().register(this, new WarConfigCommand(this), "warcfg", "warconfig");
-        game.getCommandManager().register(this, new SetZoneCommand(this), "setzone", "zoneset");
-        game.getCommandManager().register(this, new com.tommytony.war.sponge.command.DeleteZoneCommand(this), "delzone", "rmzone", "deletezone");
-        game.getCommandManager().register(this, new ZoneConfigCommand(this), "zonecfg", "zoneconfig", "zc");
-        game.getCommandManager().register(this, new SaveZoneCommand(this), "savezone", "zonesave", "zs");
-        game.getCommandManager().register(this, new ResetZoneCommand(this), "resetzone", "reloadzone", "zr");
-        game.getCommandManager().register(this, new SetPointCommand(this), "point", "location");
-        game.getCommandManager().register(this, new LeaveCommand(this), "warleave");
+        cmdManager = new SpongeCommandManager(this);
+        cmdManager.registerCommands();
         game.getEventManager().registerListeners(this, new PlayerListener(this));
 
         if (!dataDir.exists() && !dataDir.mkdirs())

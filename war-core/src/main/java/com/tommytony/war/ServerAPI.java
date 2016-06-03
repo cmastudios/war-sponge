@@ -5,6 +5,7 @@ import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.Warzone;
+import com.tommytony.war.zone.ZoneValidator;
 
 import java.io.File;
 import java.util.Map;
@@ -96,4 +97,11 @@ public interface ServerAPI {
      * @param runnable Task to execute.
      */
     void delayTask(double delay, Runnable runnable);
+
+    /**
+     * Get an instance of the zone security validator.
+     *
+     * @return validator
+     */
+    ZoneValidator getValidator();
 }

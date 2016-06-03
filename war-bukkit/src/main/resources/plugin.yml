@@ -4,51 +4,7 @@ description: ${project.description}
 author: cmastudios
 website: ${project.url}
 main: ${main.class}
-commands:
-  warzone:
-    description: Teleport to a warzone
-    usage: /<command> <zone>
-    aliases: [zone]
-    permission: war.teleport
-  warcfg:
-    description: View/modify War config
-    usage: /<command> [-p] setting value
-    aliases: [warconfig]
-    permission: war.config
-  setzone:
-    description: Creates a warzone
-    usage: /<command> <name/c1/c2>
-    aliases: [zoneset]
-    permission: war.zone.create
-  delzone:
-    description: Delete a warzone
-    usage: /<command> <name>
-    aliases: [rmzone, deletezone]
-    permission: war.zone.delete
-  zonecfg:
-    description: View or set properties of warzone
-    usage: /<command> <zone> setting value
-    aliases: [zoneconfig, zc]
-    permission: war.zone.config
-  savezone:
-    description: Saves the zone to disk
-    usage: /<command> <zone>
-    aliases: [zonesave, zs]
-    permission: war.zone.save
-  resetzone:
-    description: Reset and reload a zone
-    usage: /<command> <zone>
-    aliases: [zonereset, zr]
-    permission: war.zone.reset
-  setpoint:
-    description: Set a location for a zone, such as a spawn or gate
-    usage: /<command> <zone> <lobby/spawn/gate> [team/autoassign]
-    aliases: [point, location]
-    permission: war.zone.config
-  leave:
-    description: Leave an active game
-    usage: /<command>
-    aliases: [warleave]
+commands: {}
 permissions:
   war.teleport:
     description: Required to teleport to a warzone

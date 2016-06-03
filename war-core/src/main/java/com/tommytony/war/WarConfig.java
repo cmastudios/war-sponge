@@ -10,13 +10,14 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
  * The main war configuration database.
  */
 public class WarConfig implements Closeable {
+    public static final String DEFAULT_FORMAT = "{0} <{1}> ({2})";
+    public static final String MODIFIED_FORMAT = "{0} <{1}> = {2}";
     private final ZoneConfig zoneDefaults;
     /**
      * Database configuration descriptor.
@@ -148,6 +149,42 @@ public class WarConfig implements Closeable {
         }
     }
 
+    public Object getObject(WarSetting setting) {
+        if (setting.getDataType() == Integer.class) {
+            return this.getInt(setting);
+        }
+        return null;
+    }
+
+    public void setValue(WarSetting setting, String value) {
+        if (setting.getDataType() == Integer.class) {
+            setInt(setting, Integer.valueOf(value));
+        }
+    }
+
+    public void setInt(WarSetting setting, int value) {
+        boolean exists;
+        String sql = "INSERT INTO settings (value, option) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement("SELECT value FROM settings WHERE option = ?")) {
+            stmt.setString(1, setting.name());
+            try (ResultSet result = stmt.executeQuery()) {
+                exists = result.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        if (exists) {
+            sql = "UPDATE settings SET value = ? WHERE option = ?";
+        }
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, value);
+            stmt.setString(2, setting.name());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * Possible types of settings stored in the war server config database.
      */
@@ -160,6 +197,14 @@ public class WarConfig implements Closeable {
         WarSetting(Class<?> dataType, Object defaultValue) {
             this.dataType = dataType;
             this.defaultValue = defaultValue;
+        }
+
+        public Class<?> getDataType() {
+            return dataType;
+        }
+
+        public Object getDefaultValue() {
+            return defaultValue;
         }
     }
 }

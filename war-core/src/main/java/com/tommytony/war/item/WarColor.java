@@ -27,4 +27,9 @@ public enum WarColor {
     public String getCode() {
         return String.format("§%x", code);
     }
+
+    @Override
+    public String toString() {
+        return getCode();
+    }
 }

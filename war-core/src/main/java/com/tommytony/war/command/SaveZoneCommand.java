@@ -8,8 +8,8 @@ import com.tommytony.war.zone.Warzone;
 import java.text.MessageFormat;
 import java.util.List;
 
-public class DeleteZoneCommand extends WarCommand {
-    public DeleteZoneCommand(ServerAPI plugin) {
+public class SaveZoneCommand extends WarCommand {
+    public SaveZoneCommand(ServerAPI plugin) {
         super(plugin);
     }
 
@@ -23,8 +23,11 @@ public class DeleteZoneCommand extends WarCommand {
         if (zone == null) {
             throw new CommandUserError(MessageFormat.format("Warzone {0} not found.", zoneName));
         }
-        String output = getPlugin().deleteZone(zoneName);
-        sender.sendMessage(MessageFormat.format("Deleted warzone {0}, moved data file to {1}.", zone, output));
+        sender.sendMessage(MessageFormat.format("Saving zone {0}...", zoneName));
+        zone.save();
+        int affected = (int) Math.floor(zone.getCuboid().getSize());
+        sender.sendMessage(MessageFormat.format("Saved {0} blocks in zone {1}.", affected, zoneName));
+
     }
 
     @Override
@@ -43,22 +46,24 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getName() {
-        return "deletezone";
+        return "savezone";
     }
 
     @Override
     public List<String> getAliases() {
-        return ImmutableList.of("delzone");
+        return ImmutableList.of();
     }
 
     @Override
     public String getTagline() {
-        return "Delete a warzone.";
+        return "Save zone blocks to disk.";
     }
 
     @Override
     public String getDescription() {
-        return "Resets and unloads the warzone from the server, and moves the zone file to War's trash folder.";
+        return "This command only adds the current state of the zone to the storage file. All other configuration changes are saved automatically.\n" +
+                "Warning: this command will function during a game; make sure this is the intended behavior.\n" +
+                "Currently, the plugin does not store previous versions of zones: this command will overwrite the existing save.";
     }
 
     @Override
@@ -68,6 +73,6 @@ public class DeleteZoneCommand extends WarCommand {
 
     @Override
     public String getPermission() {
-        return "war.zone.delete";
+        return "war.zone.save";
     }
 }
