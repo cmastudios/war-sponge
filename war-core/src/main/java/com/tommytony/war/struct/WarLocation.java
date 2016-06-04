@@ -1,10 +1,23 @@
 package com.tommytony.war.struct;
 
+/**
+ * Represents the position of a block or player in a world.
+ */
 public class WarLocation {
     private double x, y, z;
     private String world;
     private double pitch, yaw;
 
+    /**
+     * Create a new location based on player orientation.
+     *
+     * @param x     position in X dimension.
+     * @param y     position in Y dimension.
+     * @param z     position in Z dimension.
+     * @param world world containing the location.
+     * @param pitch head pitch of player.
+     * @param yaw   head yaw of player.
+     */
     public WarLocation(double x, double y, double z, String world, double pitch, double yaw) {
         this.x = x;
         this.y = y;
@@ -14,6 +27,14 @@ public class WarLocation {
         this.yaw = yaw;
     }
 
+    /**
+     * Create a new location based on block position.
+     *
+     * @param x position in X dimension.
+     * @param y position in Y dimension.
+     * @param z position in Z dimension.
+     * @param world world containing the block.
+     */
     public WarLocation(double x, double y, double z, String world) {
         this(x, y, z, world, 0, 0);
     }
@@ -54,6 +75,11 @@ public class WarLocation {
         return (int) Math.floor(z);
     }
 
+    /**
+     * Get location of the block rounded to integer values.
+     *
+     * @return location.
+     */
     public WarLocation getBlockLoc() {
         return new WarLocation(getBlockX(), getBlockY(), getBlockZ(), world, 0, 0);
     }
@@ -63,10 +89,21 @@ public class WarLocation {
         return String.format("x: %d, y: %d, z: %d", getBlockX(), getBlockY(), getBlockZ());
     }
 
+    /**
+     * Add all components of both locations together.
+     *
+     * @param two second location.
+     * @return arithmetic sum of two locations.
+     */
     public WarLocation add(WarLocation two) {
         return new WarLocation(this.x + two.x, this.y + two.y, this.z + two.z, this.world, pitch + two.pitch, yaw + two.yaw);
     }
 
+    /**
+     * Subtract the components of location two from this location.
+     * @param two subtrahend.
+     * @return difference between both locations.
+     */
     public WarLocation sub(WarLocation two) {
         return new WarLocation(this.x - two.x, this.y - two.y, this.z - two.z, this.world, pitch - two.pitch, yaw - two.yaw);
     }

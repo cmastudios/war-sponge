@@ -9,17 +9,35 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Base class for all commands in the War plugin's abstract command system. This level handles command execution, error
+ * processing, and arguments processing, serving as the entry-point to each child.
+ */
 public abstract class WarCommand {
     private final ServerAPI plugin;
 
+    /**
+     * Initializes the command.
+     *
+     * @param plugin instance of War plugin.
+     */
     public WarCommand(ServerAPI plugin) {
         this.plugin = plugin;
     }
 
+    /**
+     * Attempts to run a command. This method returns and throws nothing, but it may have side effects. This also
+     * manages error and exception handling before passing control to the command itself.
+     *
+     * @param sender either console or the player who executed the command.
+     * @param args   arguments after the command.
+     */
     public void runCommand(WarConsole sender, String[] args) {
         try {
+            // call the command run function
             handleCommand(sender, args);
         } catch (InvalidArgumentsError ex) {
+            // custom exception representing insufficient or too many arguments.
             if (sender instanceof WarPlayer) {
                 sender.sendMessage(WarColor.RED + ex.getMessage());
             } else {
@@ -27,12 +45,14 @@ public abstract class WarCommand {
             }
             sender.sendMessage(WarColor.YELLOW + "Usage: " + this.getUsage());
         } catch (CommandUserError | IllegalArgumentException | IllegalStateException ex) {
+            // thrown from the command or parts of the War plugin
             if (sender instanceof WarPlayer) {
                 sender.sendMessage(WarColor.RED + ex.getMessage());
             } else {
                 sender.sendMessage(ex.getMessage());
             }
         } catch (RuntimeException ex) {
+            // error/bug in the plugin
             if (sender instanceof WarPlayer) {
                 sender.sendMessage(WarColor.RED + "Error in War plugin, check server console for details.");
             }
@@ -45,45 +65,64 @@ public abstract class WarCommand {
         }
     }
 
-    public void runCommand(WarConsole sender, String arg) {
-        if (arg.isEmpty()) {
-            runCommand(sender, new String[]{});
-        } else {
-            String[] args = arg.trim().split(" ");
-            runCommand(sender, args);
-        }
-    }
-
+    /**
+     * Performs tab completion based on the arguments typed so far.
+     *
+     * @param sender player typing the command.
+     * @param args arguments so far.
+     * @return list of suggestions
+     */
     public List<String> tabComplete(WarConsole sender, String[] args) {
         return handleTab(sender, args);
-    }
-
-    public List<String> tabComplete(WarConsole sender, String arg) {
-        if (arg.isEmpty()) {
-            return tabComplete(sender, new String[]{});
-        } else {
-            String[] args = arg.trim().split(" ");
-            return tabComplete(sender, args);
-        }
     }
 
     abstract void handleCommand(WarConsole sender, String[] args);
 
     abstract List<String> handleTab(WarConsole sender, String[] args);
 
-    public ServerAPI getPlugin() {
+    protected ServerAPI getPlugin() {
         return plugin;
     }
 
+    /**
+     * Gets the executable name of the command. e.g. /name
+     *
+     * @return name.
+     */
     public abstract String getName();
 
+    /**
+     * Gets alternative names for the command which can be used by a sender.
+     *
+     * @return aliases.
+     */
     public abstract List<String> getAliases();
 
+    /**
+     * Gets a short description of the command's function. This is displayed first in the help menu.
+     *
+     * @return tagline.
+     */
     public abstract String getTagline();
 
+    /**
+     * Gets the main help string, displayed after the tagline.
+     *
+     * @return description.
+     */
     public abstract String getDescription();
 
+    /**
+     * Gets format of command usage.
+     *
+     * @return usage.
+     */
     public abstract String getUsage();
 
+    /**
+     * Gets permission required to use command. Will be checked by the server.
+     *
+     * @return permission.
+     */
     public abstract String getPermission();
 }

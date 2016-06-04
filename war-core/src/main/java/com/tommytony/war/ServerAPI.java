@@ -10,6 +10,9 @@ import com.tommytony.war.zone.ZoneValidator;
 import java.io.File;
 import java.util.Map;
 
+/**
+ * Base class for the plugin main class implementations. Provides most of the abstraction between servers.
+ */
 public interface ServerAPI {
     /**
      * Get information from the server about the block at a specific location.

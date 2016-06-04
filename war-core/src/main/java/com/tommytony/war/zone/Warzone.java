@@ -45,6 +45,11 @@ public class Warzone implements AutoCloseable {
         this.listener = new ZoneListener(this, plugin);
     }
 
+    /**
+     * Get a cuboid containing all blocks in the warzone.
+     *
+     * @return cuboid region for zone.
+     */
     public WarCuboid getCuboid() {
         try {
             return new WarCuboid(db.getPosition("position1"), db.getPosition("position2"));
@@ -71,6 +76,12 @@ public class Warzone implements AutoCloseable {
         return name;
     }
 
+    /**
+     * Get the location of the warzone lobby.
+     *
+     * @return lobby location.
+     * @throws IllegalStateException if no lobby exists.
+     */
     public WarLocation getTeleport() {
         try {
             if (db.hasPosition("lobby")) {
@@ -83,9 +94,15 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Set the location of the warzone lobby.
+     *
+     * @param location new lobby location.
+     * @throws IllegalArgumentException illegal lobby location.
+     */
     public void setTeleport(WarLocation location) {
         if (this.getCuboid().contains(location)) {
-            throw new IllegalStateException("Lobby position cannot be set inside of a zone.");
+            throw new IllegalArgumentException("Lobby position cannot be set inside of a zone.");
         }
         try {
             db.setPosition("lobby", location);
@@ -94,6 +111,11 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Get a list of teams in this zone. This function is based on the team spawn locations saved in the database.
+     *
+     * @return list of teams.
+     */
     public List<String> getTeams() {
         try {
             return db.getTeams();
@@ -102,6 +124,12 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Get the location of the team spawn.
+     *
+     * @param teamName name of team in this zone.
+     * @return location of spawn.
+     */
     public WarLocation getTeamSpawn(String teamName) {
         try {
             return db.getPosition("teamspawn" + teamName);
@@ -110,9 +138,16 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Set the location of the spawn for a particular team.
+     *
+     * @param teamName team of spawn.
+     * @param location spawn location.
+     * @throws IllegalArgumentException illegal spawn position.
+     */
     public void setTeamSpawn(String teamName, WarLocation location) {
         if (!this.getCuboid().contains(location)) {
-            throw new IllegalStateException("Team spawn position must be set inside of a zone.");
+            throw new IllegalArgumentException("Team spawn position must be set inside of a zone.");
         }
         try {
             db.setPosition("teamspawn" + teamName, location);
@@ -121,6 +156,12 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Delete the spawn of a team in the zone. This effectively deletes the team due to the algorithm employed by the
+     * #getZones method.
+     *
+     * @param teamName team to delete.
+     */
     public void deleteTeam(String teamName) {
         try {
             db.deletePosition("teamspawn" + teamName);
@@ -129,10 +170,22 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Get the location of the warzone data file. All information, blocks, settings, and locations for a warzone are
+     * saved in this file.
+     *
+     * @return warzone file location.
+     */
     public File getDataFile() {
         return db.getDataStore();
     }
 
+    /**
+     * Save all blocks in the warzone. This method will block on the current thread until all blocks are saved. Server
+     * administrators may prevent crashes resulting from large warzone saving by tweaking the maxzonesize setting.
+     * <p>
+     * This method saves only blocks. All other data, such as coordinates and settings, are saved automatically.
+     */
     public void save() {
         plugin.logInfo("Saving zone " + this.getName() + "...");
         try {
@@ -142,6 +195,10 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Replace all the blocks in the region of the warzone to the blocks stored in the warzone database. This will block
+     * on the current thread until finished.
+     */
     public void reset() {
         plugin.logInfo("Reloading zone " + this.getName() + "...");
         plugin.removeEntity(this.getCuboid(), WarEntity.ITEM);
@@ -152,6 +209,11 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Create a wall around the warzone to prevent the entry of a specific player.
+     *
+     * @param player target of block updates.
+     */
     public void mask(WarPlayer player) {
         for (WarLocation loc : this.getCuboid()) {
             // following condition checks if the block is on a face of the cuboid
@@ -164,6 +226,12 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Remove the wall around the warzone in a player's view, by re-sending all the blocks that were originally
+     * replaced.
+     *
+     * @param player target of block updates.
+     */
     public void unmask(WarPlayer player) {
         for (WarLocation loc : this.getCuboid()) {
             // following condition checks if the block is on a face of the cuboid
@@ -175,6 +243,10 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Closes the warzone's underlying database, saving all information.
+     * @throws Exception if the database cannot be closed.
+     */
     @Override
     public void close() throws Exception {
         db.close();
@@ -188,20 +260,32 @@ public class Warzone implements AutoCloseable {
         return listener;
     }
 
+    /**
+     * Gets the active game in this warzone. May not be present if no game is underway.
+     *
+     * @return game or none.
+     */
     public Optional<WarGame> getGame() {
         return Optional.ofNullable(game);
     }
 
-    public void setGame(WarGame game) {
+    void setGame(WarGame game) {
         this.game = game;
     }
 
+    /**
+     * Set the location of a gate. Gates take players from a location outside the zone to a position on a team.
+     *
+     * @param gateName either a valid team name or 'autoassign'.
+     * @param location location outside the warzone.
+     * @throws IllegalArgumentException invalid gate name or location position.
+     */
     public void setGate(String gateName, WarLocation location) {
         if (!gateName.equals("autoassign") && getTeamSpawn(gateName) == null) {
             throw new IllegalArgumentException("Gate must be for an existing team or set to autoassign.");
         }
         if (this.getCuboid().contains(location)) {
-            throw new IllegalStateException("Gate position cannot be set inside of a zone.");
+            throw new IllegalArgumentException("Gate position cannot be set inside of a zone.");
         }
         gates = null;
         try {
@@ -211,6 +295,11 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Remove a gate linking to this warzone.
+     *
+     * @param gateName either a valid team name or 'autoassign'.
+     */
     public void deleteGate(String gateName) {
         gates = null;
         try {
@@ -220,6 +309,12 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Get the location of all gates linking to this warzone. The result is cached in memory for efficient lookup when
+     * a player moves.
+     *
+     * @return mapping of locations to gate names.
+     */
     public Map<WarLocation, String> getGates() {
         if (gates != null) {
             return gates;
@@ -232,6 +327,10 @@ public class Warzone implements AutoCloseable {
         }
     }
 
+    /**
+     * Start a new game in the warzone. This is called when a player enters a gate and no game already exists.
+     * @throws IllegalStateException If the warzone is disabled or has no teams.
+     */
     public void newGame() {
         if (this.getConfig().getBoolean(ZoneSetting.EDITING))
             throw new IllegalStateException("Warzone disabled.");

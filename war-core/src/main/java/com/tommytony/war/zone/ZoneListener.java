@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 /**
- * Handles events that occur in relation to a war zone.
+ * Handles events that occur in relation to a particular zone.
  */
 public class ZoneListener {
     private final Warzone warzone;

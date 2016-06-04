@@ -10,6 +10,9 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Active game in a warzone.
+ */
 public class WarGame {
     private final Warzone warzone;
     private final ServerAPI plugin;
@@ -30,18 +33,41 @@ public class WarGame {
         inventories = new HashMap<>();
     }
 
+    /**
+     * Get team information by name.
+     *
+     * @param teamName team name to lookup.
+     * @return team information or null if not found.
+     */
     public Team getTeam(String teamName) {
         return teams.stream().filter(team -> team.getName().equalsIgnoreCase(teamName)).findFirst().orElse(null);
     }
 
+    /**
+     * Get the team a particular player is playing for.
+     *
+     * @param player player to search.
+     * @return team information or null if not found.
+     */
     public Team getPlayerTeam(WarPlayer player) {
         return teams.stream().filter(team -> team.players.contains(player)).findFirst().orElse(null);
     }
 
+    /**
+     * Check if a player is playing in this warzone.
+     *
+     * @param player player to search.
+     * @return true if player is playing.
+     */
     public boolean isPlaying(WarPlayer player) {
         return players.contains(player);
     }
 
+    /**
+     * Assign a player to a team, picking the team with the least number of players.
+     *
+     * @param player player to assign.
+     */
     public void autoAssign(WarPlayer player) {
         if (teams.size() == 0) {
             throw new IllegalStateException("No teams in this warzone.");
@@ -53,6 +79,12 @@ public class WarGame {
         assign(player, first.get());
     }
 
+    /**
+     * Assign a player to a team. This then saves the player's state and brings them into the zone.
+     *
+     * @param player player to assign.
+     * @param team   team for player.
+     */
     public void assign(WarPlayer player, Team team) {
         if (team == null) {
             throw new IllegalStateException("Team does not exist.");
@@ -98,6 +130,11 @@ public class WarGame {
         player.setState(inventories.get(player));
     }
 
+    /**
+     * Send a message to all players in the warzone.
+     *
+     * @param message message to broadcast.
+     */
     public void broadcast(String message) {
         players.stream().forEach(p -> p.sendMessage(message));
     }
@@ -112,6 +149,10 @@ public class WarGame {
         }
     }
 
+    /**
+     * End the current round in the warzone. This reloads all blocks and resets all team points. If the round counter
+     * has exceeded the maximum rounds for this warzone, then all players are removed.
+     */
     public void endRound() {
         boolean gameOver = round++ >= warzone.getConfig().getInt(ZoneSetting.MAXROUNDS);
         StringBuilder builder = new StringBuilder();
@@ -134,23 +175,31 @@ public class WarGame {
         players.forEach(this::resetPlayerState);
     }
 
-    public void removePlayer(WarPlayer p) {
-        String playerName = p.getName();
-        String teamName = getPlayerTeam(p).getName();
-        removePlayerSilent(p);
+    /**
+     * Publicly remove a player from a warzone, restoring their state and bringing them to the lobby.
+     *
+     * @param player player to remove
+     */
+    public void removePlayer(WarPlayer player) {
+        String playerName = player.getName();
+        String teamName = getPlayerTeam(player).getName();
+        removePlayerSilent(player);
         this.broadcast(MessageFormat.format("Player {0} left team {1}.", playerName, teamName));
     }
 
-    private void removePlayerSilent(WarPlayer p) {
-        getPlayerTeam(p).players.remove(p);
-        players.remove(p);
-        p.setLocation(warzone.getTeleport());
-        restorePlayerState(p);
+    private void removePlayerSilent(WarPlayer player) {
+        getPlayerTeam(player).players.remove(player);
+        players.remove(player);
+        player.setLocation(warzone.getTeleport());
+        restorePlayerState(player);
         if (players.isEmpty()) {
             warzone.setGame(null); // kill ourselves
         }
     }
 
+    /**
+     * End the current game and remove all players, resetting the warzone additionally.
+     */
     public void forceEndGame() {
         round = Integer.MAX_VALUE;
         endRound();
@@ -187,16 +236,21 @@ public class WarGame {
             points += i;
         }
 
+        /**
+         * Get the color code for the team, if the name of the team matches a known color.
+         *
+         * @return color code, or nothing.
+         */
         public String getColor() {
             try {
-                return WarColor.valueOf(name.toUpperCase()).getCode();
+                return WarColor.valueOf(name.toUpperCase()).toString();
             } catch (IllegalArgumentException e) {
                 return "";
             }
         }
 
         public String getDisplayName() {
-            return getColor() + getName() + WarColor.WHITE.getCode();
+            return getColor() + getName() + WarColor.WHITE;
         }
     }
 

@@ -33,13 +33,21 @@ class SpongeCommandManager extends WarCommandManager {
 
         @Override
         public CommandResult process(CommandSource source, String arguments) throws CommandException {
-            executor.runCommand(plugin.getSender(source), arguments);
+            String[] args = new String[0];
+            if (!arguments.isEmpty()) {
+                args = arguments.trim().split(" ");
+            }
+            executor.runCommand(plugin.getSender(source), args);
             return CommandResult.empty();
         }
 
         @Override
         public List<String> getSuggestions(CommandSource source, String arguments) throws CommandException {
-            return executor.tabComplete(plugin.getSender(source), arguments);
+            String[] args = new String[0];
+            if (!arguments.isEmpty()) {
+                args = arguments.trim().split(" ");
+            }
+            return executor.tabComplete(plugin.getSender(source), args);
         }
 
         @Override

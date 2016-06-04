@@ -28,10 +28,10 @@ public class WarConfig implements Closeable {
      * Load the war config database for future use.
      *
      * @param file War configuration database location.
-     * @throws FileNotFoundException
-     * @throws SQLException
+     * @throws FileNotFoundException if folder for database does not exist.
+     * @throws SQLException if there is an error creating or updating tables.
      */
-    public WarConfig(File file) throws FileNotFoundException, SQLException {
+    WarConfig(File file) throws FileNotFoundException, SQLException {
         conn = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS settings (option TEXT, value BLOB)");
@@ -76,7 +76,7 @@ public class WarConfig implements Closeable {
      * Load all the enabled war zones on the server.
      *
      * @return list of war zones.
-     * @throws SQLException
+     * @throws SQLException error executing query.
      */
     public Collection<String> getZones() throws SQLException {
         ArrayList<String> zones = new ArrayList<>();
@@ -93,7 +93,7 @@ public class WarConfig implements Closeable {
      * Add a zone to the database. Does not create any warzone data files.
      *
      * @param zoneName Name of the warzone.
-     * @throws SQLException
+     * @throws SQLException error executing update.
      */
     public void addZone(String zoneName) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO zones (name) VALUES (?)")) {
@@ -106,7 +106,7 @@ public class WarConfig implements Closeable {
      * Remove a zone from the database. Does not modify any warzone data files.
      *
      * @param zoneName Name of the warzone.
-     * @throws SQLException
+     * @throws SQLException error executing update.
      */
     public void deleteZone(String zoneName) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement("DELETE FROM zones WHERE name = ?")) {
@@ -119,7 +119,7 @@ public class WarConfig implements Closeable {
      * Get server zone makers. These people have permission to create zones.
      *
      * @return list of zone makers.
-     * @throws SQLException
+     * @throws SQLException error executing query.
      */
     public Collection<UUID> getZoneMakers() throws SQLException {
         ArrayList<UUID> makers = new ArrayList<>();
@@ -149,6 +149,12 @@ public class WarConfig implements Closeable {
         }
     }
 
+    /**
+     * Gets the value of any war setting.
+     *
+     * @param setting Setting to lookup.
+     * @return value of setting, or the default if not found.
+     */
     public Object getObject(WarSetting setting) {
         if (setting.getDataType() == Integer.class) {
             return this.getInt(setting);
@@ -156,12 +162,24 @@ public class WarConfig implements Closeable {
         return null;
     }
 
+    /**
+     * Set the value of any war setting. This function will convert the value stored in the string to the appropriate
+     * datatype.
+     * @param setting Setting to change.
+     * @param value value of setting to add or replace.
+     * @throws NumberFormatException contents of value are invalid for the type of setting.
+     */
     public void setValue(WarSetting setting, String value) {
         if (setting.getDataType() == Integer.class) {
             setInt(setting, Integer.valueOf(value));
         }
     }
 
+    /**
+     * Set a value in the database, for an integer.
+     * @param setting Setting to change.
+     * @param value New value to add or replace.
+     */
     public void setInt(WarSetting setting, int value) {
         boolean exists;
         String sql = "INSERT INTO settings (value, option) VALUES (?, ?)";

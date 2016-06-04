@@ -25,7 +25,7 @@ public class ZoneConfig {
      * @param database Active database to use.
      * @param table    Table name to use in database. Created if it does not exist. Needs to be trusted input.
      * @param parent   Parent zone config, for fallback. Could be zone config for a team or war global for zones.
-     * @throws SQLException
+     * @throws SQLException if there is an error creating or updating tables.
      */
     public ZoneConfig(Connection database, String table, ZoneConfig parent) throws SQLException {
         this.conn = database;
@@ -41,7 +41,7 @@ public class ZoneConfig {
      *
      * @param database Active database to use.
      * @param table    Table name to use in database. Created if it does not exist. Needs to be trusted input.
-     * @throws SQLException
+     * @throws SQLException if there is an error creating or updating tables.
      */
     public ZoneConfig(Connection database, String table) throws SQLException {
         this(database, table, null);
@@ -52,7 +52,6 @@ public class ZoneConfig {
      *
      * @param setting The type of setting to look up.
      * @return the value of the setting or the default if not found.
-     * @throws SQLException
      */
     public int getInt(ZoneSetting setting) {
         try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
@@ -78,7 +77,6 @@ public class ZoneConfig {
      * Set a value in the database, for an integer.
      * @param setting Setting to change.
      * @param value New value to add or replace.
-     * @throws SQLException
      */
     public void setInt(ZoneSetting setting, int value) {
         boolean exists;
@@ -103,6 +101,12 @@ public class ZoneConfig {
         }
     }
 
+    /**
+     * Get the value of a boolean setting.
+     *
+     * @param setting Type of setting to lookup.
+     * @return value of setting or the default if not found.
+     */
     public boolean getBoolean(ZoneSetting setting) {
         try (PreparedStatement stmt = conn.prepareStatement(String.format("SELECT value FROM %s WHERE option = ?", table))) {
             stmt.setString(1, setting.name());
@@ -123,6 +127,11 @@ public class ZoneConfig {
         }
     }
 
+    /**
+     * Set a value in the database, for a boolean setting.
+     * @param setting Setting to change.
+     * @param value New value to add or replace.
+     */
     public void setBoolean(ZoneSetting setting, boolean value) {
         boolean exists;
         String sql = "INSERT INTO %s (value, option) VALUES (?, ?)";
@@ -146,6 +155,11 @@ public class ZoneConfig {
         }
     }
 
+    /**
+     * Gets the value of any zone setting.
+     * @param setting Setting to lookup.
+     * @return value of setting, or the default if not found.
+     */
     public Object getObject(ZoneSetting setting) {
         if (setting.getDataType() == Integer.class) {
             return this.getInt(setting);
@@ -155,6 +169,13 @@ public class ZoneConfig {
         return null;
     }
 
+    /**
+     * Set the value of any zone setting. This function will convert the value stored in the string to the appropriate
+     * datatype.
+     * @param setting Setting to change.
+     * @param value value of setting to add or replace.
+     * @throws NumberFormatException contents of value are invalid for the type of setting.
+     */
     public void setValue(ZoneSetting setting, String value) {
         if (setting.getDataType() == Integer.class) {
             setInt(setting, Integer.parseInt(value));

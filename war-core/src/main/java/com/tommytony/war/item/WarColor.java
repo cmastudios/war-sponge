@@ -1,5 +1,8 @@
 package com.tommytony.war.item;
 
+/**
+ * Listing of general Minecraft color codes
+ */
 public enum WarColor {
     NAVY(0x1),
     BLUE(0x9),
@@ -24,12 +27,13 @@ public enum WarColor {
         this.code = i;
     }
 
-    public String getCode() {
-        return String.format("§%x", code);
-    }
-
+    /**
+     * Inserts the color as a formatted code into a message.
+     *
+     * @return formatted color code
+     */
     @Override
     public String toString() {
-        return getCode();
+        return String.format("§%x", code);
     }
 }

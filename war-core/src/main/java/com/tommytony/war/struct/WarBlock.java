@@ -2,6 +2,9 @@ package com.tommytony.war.struct;
 
 import java.util.Map;
 
+/**
+ * Abstract block.
+ */
 public class WarBlock {
     private String blockName;
     private Map<String, Object> data;

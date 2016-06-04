@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Stores state for players.
+ * Represents a player on the server. Provides the abstraction for all interaction directly related to a specific
+ * player. Manages state for War functionality.
  */
 public abstract class WarPlayer extends WarConsole {
     private final UUID playerId;
@@ -59,6 +60,11 @@ public abstract class WarPlayer extends WarConsole {
         return playerId;
     }
 
+    /**
+     * Check if the player is in an active game.
+     *
+     * @return true if the player is playing War
+     */
     public boolean isPlayingWar() {
         return plugin.getZones().values().stream()
                 .filter(z -> {
@@ -144,8 +150,21 @@ public abstract class WarPlayer extends WarConsole {
                 }).findAny().orElse(null);
     }
 
+    /**
+     * Get the item in the player's main hand.
+     *
+     * @return item in hand
+     */
     public abstract WarItem getItemInHand();
 
+    /**
+     * Get the player's name with formatting applied to represent their team, if teams are based on colors.
+     * <p>
+     * Despite having a similar name in comparison to the server implementations, this function uses the player's
+     * username with formatting from their status in War only.
+     *
+     * @return formatted name
+     */
     public String getDisplayName() {
         if (isPlayingWar()) {
             return getWarzone().getGame().orElseThrow(IllegalStateException::new).getPlayerTeam(this).getColor() + getName();
@@ -184,6 +203,9 @@ public abstract class WarPlayer extends WarConsole {
         public static final int ADVENTURE = 2;
     }
 
+    /**
+     * Stores a player's items and status upon entering a warzone, for restoration after a game.
+     */
     public static class PlayerState {
         private int gameMode;
         private WarItem[] inventory;

@@ -83,11 +83,27 @@ class ZoneStorage implements AutoCloseable {
         }
     }
 
+    /**
+     * Converts a database position to a real world coordinate. Calculated by adding the position1 back to the saved
+     * location.
+     *
+     * @param location location to convert.
+     * @return world location.
+     * @throws SQLException
+     */
     WarLocation dbToWorld(WarLocation location) throws SQLException {
         WarLocation position1 = this.getPosition("position1");
         return position1.add(location);
     }
 
+    /**
+     * Converts a real world position to a database position. Calculated from the difference between the location and
+     * the zone's position1.
+     *
+     * @param location location to convert.
+     * @return database location.
+     * @throws SQLException
+     */
     WarLocation worldToDb(WarLocation location) throws SQLException {
         WarLocation position1 = this.getPosition("position1");
         return location.sub(position1);
@@ -122,6 +138,13 @@ class ZoneStorage implements AutoCloseable {
         return null;
     }
 
+    /**
+     * Check if a position exists in the zone storage.
+     *
+     * @param name position to check.
+     * @return true if the database contains this position.
+     * @throws SQLException
+     */
     boolean hasPosition(String name) throws SQLException {
         return getPosition(name) != null;
     }
@@ -148,6 +171,12 @@ class ZoneStorage implements AutoCloseable {
         return teams;
     }
 
+    /**
+     * Get a list of gates to this warzone and their locations.
+     *
+     * @return gate names and locations
+     * @throws SQLException
+     */
     Map<WarLocation, String> getGates() throws SQLException {
         Map<WarLocation, String> gates = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(
@@ -199,6 +228,12 @@ class ZoneStorage implements AutoCloseable {
         positionCache.clear();
     }
 
+    /**
+     * Remove a position from the coordinates table.
+     *
+     * @param name Name of position in storage.
+     * @throws SQLException
+     */
     void deletePosition(String name) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM coordinates WHERE name = ?")) {
             stmt.setString(1, name);
@@ -206,6 +241,10 @@ class ZoneStorage implements AutoCloseable {
         }
     }
 
+    /**
+     * Load all blocks from the database into the world.
+     * @throws SQLException
+     */
     void loadBlocks() throws SQLException {
         Map<Integer, String> blockIds = new HashMap<>();
         try (PreparedStatement stmt = connection.prepareStatement(
@@ -216,6 +255,8 @@ class ZoneStorage implements AutoCloseable {
                     blockIds.put(result.getInt("id"), result.getString("name"));
                 }
             }
+        } catch (SQLException e) {
+            throw new SQLException("Exception fired while loading block IDs", e);
         }
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT x, y, z, id, meta, data FROM blocks"
@@ -232,14 +273,22 @@ class ZoneStorage implements AutoCloseable {
                     plugin.setBlock(loc, block);
                 }
             }
+        } catch (SQLException e) {
+            throw new SQLException("Exception fired while loading block data.", e);
         }
     }
 
+    /**
+     * Save blocks in the world to the database.
+     * @throws SQLException
+     */
     void saveBlocks() throws SQLException {
         long startTime = System.currentTimeMillis();
         try (Statement stmt = connection.createStatement()) {
             stmt.executeUpdate("DELETE FROM block_ids");
             stmt.executeUpdate("DELETE FROM blocks");
+        } catch (SQLException e) {
+            throw new SQLException("Failed to delete old warzone data from the database.", e);
         }
         Map<String, Integer> blockIds = new HashMap<>();
         int i = 0, changed = 0;
@@ -268,6 +317,8 @@ class ZoneStorage implements AutoCloseable {
                 }
             }
             stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new SQLException("Failed to insert block information.", e);
         }
         try (PreparedStatement stmt = connection.prepareStatement(
                 "INSERT INTO block_ids (id, name) VALUES (?, ?)"
@@ -278,6 +329,8 @@ class ZoneStorage implements AutoCloseable {
                 stmt.addBatch();
             }
             stmt.executeBatch();
+        } catch (SQLException e) {
+            throw new SQLException("Failed to insert block IDs.", e);
         }
         connection.commit();
         connection.setAutoCommit(true);

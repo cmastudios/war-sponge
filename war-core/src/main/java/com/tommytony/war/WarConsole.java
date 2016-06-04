@@ -1,8 +1,11 @@
 package com.tommytony.war;
 
+/**
+ * Command sender representing the server console.
+ */
 public abstract class WarConsole {
     /**
-     * Send the player a message. May contain formatting characters.
+     * Send the recipient a message. May contain formatting characters.
      *
      * @param message message
      */
