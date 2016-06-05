@@ -14,7 +14,7 @@
     </modules>
 
     <name>War</name>
-    <url>http://war.tommytony.com</url>
+    <url>http://warhub.net/</url>
     <description>The original TDM/CTF plugin for Minecraft</description>
     <inceptionYear>2010</inceptionYear>
 
@@ -56,6 +56,15 @@
             </roles>
             <timezone>America/Montreal</timezone>
         </developer>
+        <developer>
+            <id>kugick</id>
+            <name>Samuel Collin</name>
+            <email>samuel.live.collin@gmail.com</email>
+            <url>http://kugick.net</url>
+            <roles>
+                <role>programmer</role>
+            </roles>
+        </developer>
     </developers>
 
     <issueManagement>
@@ -79,19 +88,23 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:https://github.com/taoneill/war.git</connection>
-        <developerConnection>scm:git:https://github.com/taoneill/war.git</developerConnection>
+        <connection>scm:git:https://github.com/cmastudios/war-sponge.git</connection>
+        <developerConnection>scm:git:https://github.com/cmastudios/war-sponge.git</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/taoneill/war</url>
+        <url>https://github.com/cmastudios/war-sponge</url>
     </scm>
 
     <distributionManagement>
-        <downloadUrl>http://war.tommytony.com</downloadUrl>
+        <downloadUrl>http://warhub.net/</downloadUrl>
         <repository>
             <id>war-repo</id>
             <name>War Jenkins Maven Builds</name>
             <url>http://ci.tommytony.com/plugin/repository/everything/</url>
         </repository>
+        <site>
+            <id>warhub.net</id>
+            <url>ftp://warhub.net/var/www/html/war/</url>
+        </site>
     </distributionManagement>
 
     <properties>
@@ -124,7 +137,19 @@
                     <target>8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.5.1</version>
+            </plugin>
         </plugins>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ftp</artifactId>
+                <version>1.0</version>
+            </extension>
+        </extensions>
     </build>
 
     <reporting>
@@ -136,9 +161,7 @@
                 <reportSets>
                     <reportSet>
                         <reports>
-                            <report>index</report>
                             <report>summary</report>
-                            <report>help</report>
                             <report>distribution-management</report>
                             <report>scm</report>
                             <report>cim</report>
