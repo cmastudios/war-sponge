@@ -64,6 +64,7 @@
                                 </includes>
                             </artifactSet>
                             <minimizeJar>false</minimizeJar>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                         </configuration>
                     </execution>
                 </executions>

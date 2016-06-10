@@ -76,6 +76,7 @@
                                 </includes>
                             </artifactSet>
                             <minimizeJar>false</minimizeJar>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
                             <relocations>
                                 <relocation>
                                     <pattern>org.sqlite</pattern>

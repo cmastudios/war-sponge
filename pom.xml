@@ -20,7 +20,7 @@
 
     <licenses>
         <license>
-            <name>GNU Lesser General Public License (LGPL), Version </name>
+            <name>GNU Lesser General Public License (LGPL), Version 3</name>
             <url>http://www.gnu.org/licenses/lgpl.txt</url>
             <distribution>repo</distribution>
         </license>
@@ -97,9 +97,8 @@
     <distributionManagement>
         <downloadUrl>http://warhub.net/</downloadUrl>
         <repository>
-            <id>war-repo</id>
-            <name>War Jenkins Maven Builds</name>
-            <url>http://ci.tommytony.com/plugin/repository/everything/</url>
+            <id>cma-repo</id>
+            <url>http://maven.cmastudios.me/content/groups/public/</url>
         </repository>
         <site>
             <id>warhub.net</id>
