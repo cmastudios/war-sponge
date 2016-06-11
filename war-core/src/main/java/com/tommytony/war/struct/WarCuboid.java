@@ -7,7 +7,7 @@ import java.util.List;
  * Region of space containing locations.
  */
 public class WarCuboid implements Iterable<WarLocation> {
-    private WarLocation corner1, corner2;
+    private final WarLocation corner1, corner2;
     private List<WarLocation> blocks;
 
     /**

@@ -48,6 +48,11 @@ public class SetZoneCommand extends WarCommand {
                             "Failed to create warzone {0} with dimensions {1}. Make your zone larger/smaller by placing your second corner somewhere else.",
                             state.getZoneName(), cuboid.toString()));
                 }
+                if (getPlugin().getValidator().validateLocation(cuboid, getPlugin().getZones().values()) == ZoneValidator.ValidationStatus.INVALID) {
+                    throw new CommandUserError(MessageFormat.format(
+                            "Failed to create warzone {0} with dimensions {1}. It overlaps another warzone!",
+                            state.getZoneName(), cuboid.toString()));
+                }
                 sender.sendMessage(MessageFormat.format("Set position 2 of warzone {0} to {1}.", state.getZoneName(), location.toString()));
                 Warzone zone = getPlugin().createZone(state.getZoneName());
                 zone.setCuboid(cuboid);

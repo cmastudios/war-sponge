@@ -2,7 +2,11 @@ package com.tommytony.war.zone;
 
 import com.tommytony.war.WarConfig;
 import com.tommytony.war.struct.WarCuboid;
+import com.tommytony.war.struct.WarLocation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +46,47 @@ public class ZoneValidator {
         if (cuboid.getSizeX() < 5 || cuboid.getSizeY() < 4 || cuboid.getSizeZ() < 5
                 || cuboid.getSize() > config.getInt(WarConfig.WarSetting.MAXZONESIZE)) {
             return ValidationStatus.INVALID;
+        }
+        return ValidationStatus.VALID;
+    }
+
+    /**
+     * Check if the cuboid candidate for the warzone encompasses any other warzones.
+     *
+     * @param cuboid Candidate cuboid.
+     * @param zones List of loaded zones.
+     * @return valid if the cuboid contains no part of another warzone.
+     */
+    public ValidationStatus validateLocation(WarCuboid cuboid, Collection<Warzone> zones) {
+        List<WarCuboid> cuboids = new ArrayList<>();
+        zones.forEach(z -> cuboids.add(z.getCuboid()));
+//        for (WarLocation loc : cuboid) {
+//            for (WarCuboid check : cuboids) {
+//                if (check.contains(loc)) {
+//                    return ValidationStatus.INVALID;
+//                }
+//            }
+//        }
+        // this structure below is equivalent to the simpler code above, but is much faster
+        // the following code essentially "inlines" all of this
+        // I cannot explain why the above code runs slower. I thought it was due to the object creation. I tried to
+        //  optimise this by adding a cache on min/max block methods and in the iterator, but those made it SLOWER.
+        // Investigate this in the future.
+        for (int x = cuboid.getMinBlock().getBlockX(); x <= cuboid.getMaxBlock().getBlockX(); x++) {
+            for (int y = cuboid.getMinBlock().getBlockY(); y <= cuboid.getMaxBlock().getBlockY(); y++) {
+                for (int z = cuboid.getMinBlock().getBlockZ(); z <= cuboid.getMaxBlock().getBlockZ(); z++) {
+                    for (WarCuboid check : cuboids) {
+                        if (x >= (check.getCorner1().getX() < check.getCorner2().getX() ? check.getCorner1().getX() : check.getCorner2().getX())
+                                && x <= (check.getCorner1().getX() > check.getCorner2().getX() ? check.getCorner1().getX() : check.getCorner2().getX())
+                                && y >= (check.getCorner1().getY() < check.getCorner2().getY() ? check.getCorner1().getY() : check.getCorner2().getY())
+                                && y <= (check.getCorner1().getY() > check.getCorner2().getY() ? check.getCorner1().getY() : check.getCorner2().getY())
+                                && z >= (check.getCorner1().getZ() < check.getCorner2().getZ() ? check.getCorner1().getZ() : check.getCorner2().getZ())
+                                && z <= (check.getCorner1().getZ() > check.getCorner2().getZ() ? check.getCorner1().getZ() : check.getCorner2().getZ())) {
+                            return ValidationStatus.INVALID;
+                        }
+                    }
+                }
+            }
         }
         return ValidationStatus.VALID;
     }
