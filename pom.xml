@@ -14,7 +14,7 @@
     </modules>
 
     <name>War</name>
-    <url>http://warhub.net/</url>
+    <url>http://warhub.net/war/</url>
     <description>The original TDM/CTF plugin for Minecraft</description>
     <inceptionYear>2010</inceptionYear>
 
@@ -102,7 +102,7 @@
         </repository>
         <site>
             <id>warhub.net</id>
-            <url>ftp://warhub.net/var/www/html/war/</url>
+            <url>scp://warhub.net/var/www/html/war/</url>
         </site>
     </distributionManagement>
 
@@ -140,15 +140,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
                 <version>3.5.1</version>
+                <dependencies>
+                    <dependency><!-- add support for ssh/scp -->
+                        <groupId>org.apache.maven.wagon</groupId>
+                        <artifactId>wagon-ssh</artifactId>
+                        <version>1.0</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ftp</artifactId>
-                <version>1.0</version>
-            </extension>
-        </extensions>
     </build>
 
     <reporting>
