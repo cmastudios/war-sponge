@@ -3,6 +3,7 @@ package com.tommytony.war;
 import com.tommytony.war.struct.WarLocation;
 import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
+import com.tommytony.war.zone.ZoneSetting;
 
 import java.util.Optional;
 
@@ -42,6 +43,11 @@ public class WarListener {
                     String gateName = zone.getGates().get(loc);
                     if (gateName.equals("autoassign")) {
                         if (!zone.getGame().isPresent()) {
+                            if (zone.getConfig().getBoolean(ZoneSetting.EDITING)) {
+                                player.sendMessage("This zone is disabled for editing.");
+                                player.setLocation(zone.getTeleport());
+                                return;
+                            }
                             zone.newGame();
                         }
                         Optional<WarGame> game = zone.getGame();
@@ -50,6 +56,11 @@ public class WarListener {
                         }
                     } else {
                         if (!zone.getGame().isPresent()) {
+                            if (zone.getConfig().getBoolean(ZoneSetting.EDITING)) {
+                                player.sendMessage("This zone is disabled for editing.");
+                                player.setLocation(zone.getTeleport());
+                                return;
+                            }
                             zone.newGame();
                         }
                         Optional<WarGame> game = zone.getGame();
