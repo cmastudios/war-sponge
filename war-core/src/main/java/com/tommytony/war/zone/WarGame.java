@@ -119,6 +119,9 @@ public class WarGame {
     }
 
     void resetPlayerState(WarPlayer player) {
+        if (!warzone.getGame().isPresent()) {
+            return; // do nothing if the game ended (and players have already been teleported out)
+        }
         Team team = getPlayerTeam(player);
         WarPlayer.PlayerState newState = new WarPlayer.PlayerState(WarPlayer.WarGameMode.SURVIVAL, new WarItem[]{},
                 null, null, null, null, 20, 0, 0, 20, 0, 0, false);
@@ -170,9 +173,10 @@ public class WarGame {
         broadcast(builder.toString());
         if (gameOver) {
             ImmutableList.copyOf(players).forEach(this::removePlayer);
+        } else {
+            players.forEach(this::resetPlayerState);
         }
         warzone.reset();
-        players.forEach(this::resetPlayerState);
     }
 
     /**
@@ -210,6 +214,11 @@ public class WarGame {
     }
 
     void addAttack(WarPlayer attacker, WarPlayer defender) {
+        for (Iterator<WarGame.Attack> iterator = this.getAttacks().iterator(); iterator.hasNext(); ) {
+            WarGame.Attack attack = iterator.next();
+            if (attack.getDefender() == defender)
+                iterator.remove();
+        }
         attacks.add(new Attack(attacker, defender, System.currentTimeMillis()));
     }
 

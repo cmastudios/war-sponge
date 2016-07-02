@@ -1,6 +1,7 @@
 package com.tommytony.war;
 
 import com.tommytony.war.struct.WarLocation;
+import com.tommytony.war.zone.WarDamageCause;
 import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneSetting;
@@ -75,25 +76,38 @@ public class WarListener {
         return false;
     }
 
-    public boolean handleCombat(WarPlayer attacker, WarPlayer defender) {
-        if (attacker.isPlayingWar() && defender.isPlayingWar()) {
-            Warzone attackerWarzone = attacker.getWarzone();
-            Warzone defenderWarzone = defender.getWarzone();
-            if (attackerWarzone != defenderWarzone) {
-                return true; // can't attack players in other warzones
-            }
-            return attackerWarzone.getListener().handleCombat(attacker, defender);
-        }
-        if (attacker.isPlayingWar() || defender.isPlayingWar()) {
-            return true; // can't attack from outside a warzone
-        }
-        return false; // players not playing war, do not manage
-    }
-
     public boolean handleDeath(WarPlayer player, String deathMessage) {
         if (player.isPlayingWar()) {
             return player.getWarzone().getListener().handleDeath(player, deathMessage);
         }
         return false;
+    }
+
+    public boolean handleDamage(WarPlayer defender, double damage, WarDamageCause cause) {
+        if (cause instanceof WarDamageCause.Combat) {
+            WarPlayer attacker = ((WarDamageCause.Combat) cause).getAttacker();
+            if (attacker.isPlayingWar() && defender.isPlayingWar()) {
+                Warzone attackerWarzone = attacker.getWarzone();
+                Warzone defenderWarzone = defender.getWarzone();
+                if (attackerWarzone != defenderWarzone) {
+                    attacker.sendMessage("You can only attack players in your warzone.");
+                    return true; // can't attack players in other warzones
+                }
+                // pass through
+            } else if (attacker.isPlayingWar()) {
+                attacker.sendMessage("You can only attack players in your warzone.");
+                return true; // can't attack from outside a warzone
+            } else if (defender.isPlayingWar()) {
+                attacker.sendMessage("Please join the war zone first.");
+                return true;
+            } else {
+                return false; // players not playing war, do not manage
+            }
+        }
+        if (!(defender.isPlayingWar())) {
+            return false;
+        }
+        Warzone zone = defender.getWarzone();
+        return zone.getListener().handleDamage(defender, damage, cause);
     }
 }

@@ -1,5 +1,6 @@
 package com.tommytony.war;
 
+import com.tommytony.war.item.WarColor;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
@@ -167,10 +168,17 @@ public abstract class WarPlayer extends WarConsole {
      */
     public String getDisplayName() {
         if (isPlayingWar()) {
-            return getWarzone().getGame().orElseThrow(IllegalStateException::new).getPlayerTeam(this).getColor() + getName();
+            return getWarzone().getGame().orElseThrow(IllegalStateException::new).getPlayerTeam(this).getColor() + getName() + WarColor.WHITE;
         }
         return getName();
     }
+
+    /**
+     * Get the player's current health.
+     *
+     * @return health
+     */
+    public abstract double getHealth();
 
     public static class ZoneCreationState {
         private final String zoneName;

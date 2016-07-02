@@ -43,7 +43,7 @@ public abstract class WarCommand {
             } else {
                 sender.sendMessage(ex.getMessage());
             }
-            sender.sendMessage(WarColor.YELLOW + "Usage: " + this.getUsage());
+            sender.sendMessage(WarColor.YELLOW + "Usage: /" + this.getName() + " " + this.getUsage());
         } catch (CommandUserError | IllegalArgumentException | IllegalStateException ex) {
             // thrown from the command or parts of the War plugin
             if (sender instanceof WarPlayer) {

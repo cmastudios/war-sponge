@@ -153,4 +153,9 @@ class SpongeWarPlayer extends WarPlayer {
     public WarItem getItemInHand() {
         return plugin.getWarItem(getPlayer().orElseThrow(IllegalStateException::new).getItemInHand().orElse(null));
     }
+
+    @Override
+    public double getHealth() {
+        return getPlayer().orElseThrow(IllegalStateException::new).getHealthData().health().get();
+    }
 }

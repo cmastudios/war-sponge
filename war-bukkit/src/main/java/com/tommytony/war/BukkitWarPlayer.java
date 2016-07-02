@@ -141,4 +141,9 @@ class BukkitWarPlayer extends WarPlayer {
         return plugin.getWarItem(getPlayer().getInventory().getItemInMainHand());
     }
 
+    @Override
+    public double getHealth() {
+        return getPlayer().getHealth();
+    }
+
 }
