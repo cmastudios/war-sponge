@@ -90,6 +90,7 @@ public class ZoneListener {
             }
             game.checkForEndRound();
             game.resetPlayerState(defender);
+            game.resetPlayerState(defender);
             return true;
         }
         return false;

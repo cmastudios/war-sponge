@@ -6,6 +6,7 @@ import com.tommytony.war.listener.PlayerListener;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
+import com.tommytony.war.zone.WarGame;
 import com.tommytony.war.zone.Warzone;
 import com.tommytony.war.zone.ZoneValidator;
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +39,12 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     public void onDisable() {
         super.onDisable();
         players.clear();
+        for (Warzone zone : zones.values()) {
+            Optional<WarGame> game = zone.getGame();
+            if (game.isPresent()) {
+                game.get().forceEndGame();
+            }
+        }
     }
 
     @Override

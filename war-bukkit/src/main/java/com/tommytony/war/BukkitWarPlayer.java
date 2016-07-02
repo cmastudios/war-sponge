@@ -134,6 +134,8 @@ class BukkitWarPlayer extends WarPlayer {
         getPlayer().setLevel((int) state.getLevel());
         getPlayer().setExp((float) state.getExperience());
         getPlayer().setAllowFlight(state.isFlying());
+        getPlayer().setFireTicks(0);
+        getPlayer().setRemainingAir(getPlayer().getMaximumAir());
     }
 
     @Override
