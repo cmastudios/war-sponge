@@ -1,6 +1,5 @@
 package com.tommytony.war;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
@@ -12,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 class BukkitWarPlayer extends WarPlayer {
@@ -78,8 +76,16 @@ class BukkitWarPlayer extends WarPlayer {
 
     @Override
     public PlayerState getState() {
-        ImmutableList.Builder<WarItem> builder = ImmutableList.builder();
-        Arrays.stream(getPlayer().getInventory().getContents()).filter(itemStack -> itemStack != null).forEach(itemStack -> builder.add(plugin.getWarItem(itemStack)));
+        WarItem[] contents = new WarItem[36];
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = getPlayer().getInventory().getItem(i);
+            contents[i] = plugin.getWarItem(item);
+        }
+        WarItem helmet = plugin.getWarItem(getPlayer().getInventory().getHelmet());
+        WarItem chestplate = plugin.getWarItem(getPlayer().getInventory().getChestplate());
+        WarItem leggings = plugin.getWarItem(getPlayer().getInventory().getLeggings());
+        WarItem boots = plugin.getWarItem(getPlayer().getInventory().getBoots());
+        WarItem offHand = plugin.getWarItem(getPlayer().getInventory().getItemInOffHand());
         int gameMode = 0;
         switch (getPlayer().getGameMode()) {
             case CREATIVE:
@@ -96,8 +102,8 @@ class BukkitWarPlayer extends WarPlayer {
                 break;
         }
         return new PlayerState(gameMode,
-                builder.build().toArray(new WarItem[0]),
-                null, null, null, null,
+                contents,
+                helmet, chestplate, leggings, boots, offHand,
                 getPlayer().getHealth(),
                 getPlayer().getExhaustion(),
                 getPlayer().getSaturation(),
@@ -123,10 +129,19 @@ class BukkitWarPlayer extends WarPlayer {
             default:
                 break;
         }
-        ImmutableList.Builder<ItemStack> builder = ImmutableList.builder();
-        Arrays.stream(state.getInventory()).forEach(warItem -> builder.add(plugin.getBukkitItem(warItem)));
         getPlayer().getInventory().clear();
-        getPlayer().getInventory().setContents(builder.build().toArray(new ItemStack[0]));
+        for (int i = 0; i < 36; i++) {
+            if (state.getInventory().length > i && state.getInventory()[i] != null) {
+                ItemStack item = plugin.getBukkitItem(state.getInventory()[i]);
+                getPlayer().getInventory().setItem(i, item);
+            }
+        }
+        getPlayer().getInventory().setHelmet(plugin.getBukkitItem(state.getHelmet()));
+        getPlayer().getInventory().setChestplate(plugin.getBukkitItem(state.getChestplate()));
+        getPlayer().getInventory().setLeggings(plugin.getBukkitItem(state.getLeggings()));
+        getPlayer().getInventory().setBoots(plugin.getBukkitItem(state.getBoots()));
+        getPlayer().getInventory().setItemInOffHand(plugin.getBukkitItem(state.getOffHand()));
+        getPlayer().getInventory().setHeldItemSlot(0);
         getPlayer().setHealth(state.getHealth());
         getPlayer().setExhaustion((float) state.getExhaustion());
         getPlayer().setSaturation((float) state.getSaturation());

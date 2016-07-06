@@ -333,6 +333,8 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     }
 
     public WarItem getWarItem(ItemStack itemStack) {
+        if (itemStack == null || itemStack.getAmount() < 1)
+            return new WarItem("empty", "", 0);
         String name = itemStack.getType().name();
         int count = itemStack.getAmount();
         YamlConfiguration config = new YamlConfiguration();
@@ -341,6 +343,9 @@ public final class WarPlugin extends JavaPlugin implements ServerAPI {
     }
 
     public ItemStack getBukkitItem(WarItem warItem) {
+        if (warItem == null || warItem.getCount() == 0) {
+            return null;
+        }
         YamlConfiguration config = new YamlConfiguration();
         try {
             config.loadFromString(warItem.getSerialized());

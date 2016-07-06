@@ -217,7 +217,7 @@ public abstract class WarPlayer extends WarConsole {
     public static class PlayerState {
         private int gameMode;
         private WarItem[] inventory;
-        private WarItem helmet, chestplate, leggings, boots;
+        private WarItem helmet, chestplate, leggings, boots, offHand;
         private double health;
         private double exhaustion;
         private double saturation;
@@ -227,14 +227,15 @@ public abstract class WarPlayer extends WarConsole {
         private boolean flying;
 
         public PlayerState(int gameMode, WarItem[] inventory, WarItem helmet, WarItem chestplate, WarItem leggings,
-                           WarItem boots, double health, double exhaustion, double saturation, double hunger,
-                           double level, double experience, boolean flying) {
+                           WarItem boots, WarItem offHand, double health, double exhaustion, double saturation,
+                           double hunger, double level, double experience, boolean flying) {
             this.gameMode = gameMode;
             this.inventory = inventory;
             this.helmet = helmet;
             this.chestplate = chestplate;
             this.leggings = leggings;
             this.boots = boots;
+            this.offHand = offHand;
             this.health = health;
             this.exhaustion = exhaustion;
             this.saturation = saturation;
@@ -290,6 +291,14 @@ public abstract class WarPlayer extends WarConsole {
 
         public void setBoots(WarItem boots) {
             this.boots = boots;
+        }
+
+        public WarItem getOffHand() {
+            return offHand;
+        }
+
+        public void setOffHand(WarItem offHand) {
+            this.offHand = offHand;
         }
 
         public double getHealth() {
