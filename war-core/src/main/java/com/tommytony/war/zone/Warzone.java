@@ -3,6 +3,7 @@ package com.tommytony.war.zone;
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarPlayer;
 import com.tommytony.war.item.WarEntity;
+import com.tommytony.war.item.WarInventory;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarCuboid;
 import com.tommytony.war.struct.WarLocation;
@@ -337,5 +338,36 @@ public class Warzone implements AutoCloseable {
         if (this.getTeams().isEmpty())
             throw new IllegalStateException("Cannot start a game in a warzone without teams.");
         setGame(new WarGame(this, plugin));
+    }
+
+    /**
+     * Save the contents of a inventory to the zone.
+     *
+     * @param name      name of the inventory to update or create.
+     * @param inventory contents of the inventory.
+     */
+    public void saveInventory(String name, WarInventory inventory) {
+        try {
+            db.saveInventory(name, inventory);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Retrieve the contents of an inventory.
+     *
+     * @param name name of the inventory to look up.
+     * @return loaded inventory data or an empty inventory if not found.
+     */
+    public WarInventory getInventory(String name) {
+        try {
+            WarInventory inventory = db.getInventory(name);
+            if (inventory == null)
+                return new WarInventory();
+            return inventory;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

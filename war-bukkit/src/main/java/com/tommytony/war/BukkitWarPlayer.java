@@ -1,6 +1,7 @@
 package com.tommytony.war;
 
 import com.google.common.collect.ImmutableSet;
+import com.tommytony.war.item.WarInventory;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
@@ -102,8 +103,7 @@ class BukkitWarPlayer extends WarPlayer {
                 break;
         }
         return new PlayerState(gameMode,
-                contents,
-                helmet, chestplate, leggings, boots, offHand,
+                new WarInventory(contents, helmet, chestplate, leggings, boots, offHand),
                 getPlayer().getHealth(),
                 getPlayer().getExhaustion(),
                 getPlayer().getSaturation(),
@@ -130,17 +130,17 @@ class BukkitWarPlayer extends WarPlayer {
                 break;
         }
         getPlayer().getInventory().clear();
-        for (int i = 0; i < 36; i++) {
-            if (state.getInventory().length > i && state.getInventory()[i] != null) {
-                ItemStack item = plugin.getBukkitItem(state.getInventory()[i]);
+        for (int i = 0; i < WarInventory.INVENTORY_LENGTH; i++) {
+            if (state.getInventory().getContents().length > i && state.getInventory().getContents()[i] != null) {
+                ItemStack item = plugin.getBukkitItem(state.getInventory().getContents()[i]);
                 getPlayer().getInventory().setItem(i, item);
             }
         }
-        getPlayer().getInventory().setHelmet(plugin.getBukkitItem(state.getHelmet()));
-        getPlayer().getInventory().setChestplate(plugin.getBukkitItem(state.getChestplate()));
-        getPlayer().getInventory().setLeggings(plugin.getBukkitItem(state.getLeggings()));
-        getPlayer().getInventory().setBoots(plugin.getBukkitItem(state.getBoots()));
-        getPlayer().getInventory().setItemInOffHand(plugin.getBukkitItem(state.getOffHand()));
+        getPlayer().getInventory().setHelmet(plugin.getBukkitItem(state.getInventory().getHelmet()));
+        getPlayer().getInventory().setChestplate(plugin.getBukkitItem(state.getInventory().getChestplate()));
+        getPlayer().getInventory().setLeggings(plugin.getBukkitItem(state.getInventory().getLeggings()));
+        getPlayer().getInventory().setBoots(plugin.getBukkitItem(state.getInventory().getBoots()));
+        getPlayer().getInventory().setItemInOffHand(plugin.getBukkitItem(state.getInventory().getOffHand()));
         getPlayer().getInventory().setHeldItemSlot(0);
         getPlayer().setHealth(state.getHealth());
         getPlayer().setExhaustion((float) state.getExhaustion());

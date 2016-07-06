@@ -22,6 +22,7 @@ public abstract class WarCommandManager {
         registerCommand(new TeleportZoneCommand(plugin));
         registerCommand(new LeaveCommand(plugin));
         registerCommand(new SetPointCommand(plugin));
+        registerCommand(new SetInventoryCommand(plugin));
         registerCommand(new ResetZoneCommand(plugin));
         registerCommand(new ZoneConfigCommand(plugin));
         registerCommand(new SaveZoneCommand(plugin));

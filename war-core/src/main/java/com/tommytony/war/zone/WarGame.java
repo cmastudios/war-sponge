@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.tommytony.war.ServerAPI;
 import com.tommytony.war.WarPlayer;
 import com.tommytony.war.item.WarColor;
-import com.tommytony.war.item.WarItem;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -123,8 +122,7 @@ public class WarGame {
             return; // do nothing if the game ended (and players have already been teleported out)
         }
         Team team = getPlayerTeam(player);
-        WarPlayer.PlayerState newState = new WarPlayer.PlayerState(WarPlayer.WarGameMode.SURVIVAL, new WarItem[]{},
-                null, null, null, null, null, 20, 0, 0, 20, 0, 0, false);
+        WarPlayer.PlayerState newState = new WarPlayer.PlayerState(WarPlayer.WarGameMode.SURVIVAL, warzone.getInventory("default"), 20, 0, 0, 20, 0, 0, false);
         player.setState(newState);
         player.setLocation(warzone.getTeamSpawn(team.getName()));
     }

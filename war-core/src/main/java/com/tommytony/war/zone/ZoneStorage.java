@@ -1,6 +1,8 @@
 package com.tommytony.war.zone;
 
 import com.tommytony.war.ServerAPI;
+import com.tommytony.war.item.WarInventory;
+import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
 
@@ -16,7 +18,7 @@ import java.util.Map;
  * Manages the war zone database file, which contains all the data for the war zone.
  */
 class ZoneStorage implements AutoCloseable {
-    private static int DATABASE_VERSION = 1;
+    private static int DATABASE_VERSION = 2;
     private static int BATCH_SIZE = 10000;
     private final Warzone zone;
     private final Connection connection;
@@ -55,32 +57,34 @@ class ZoneStorage implements AutoCloseable {
      */
     private void upgradeDatabase() throws SQLException {
         int version;
-        try (
-                Statement stmt = connection.createStatement();
-                ResultSet resultSet = stmt.executeQuery("PRAGMA user_version")
-        ) {
+        Statement stmt = connection.createStatement();
+        try (ResultSet resultSet = stmt.executeQuery("PRAGMA user_version")) {
             version = resultSet.getInt("user_version");
         }
         if (version > DATABASE_VERSION) {
             // version is from a future version
             throw new IllegalStateException(String.format("Unsupported zone version: %d. War current version: %d",
                     version, DATABASE_VERSION));
-        } else if (version == 0) {
-            // brand new database file
-            Statement stmt = connection.createStatement();
-            stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, pitch NUMERIC, yaw NUMERIC, world TEXT)");
-            stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER, name TEXT)");
-            stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, meta INTEGER, data BLOB)");
-            stmt.executeUpdate(String.format("PRAGMA user_version = %d", DATABASE_VERSION));
         } else if (version < DATABASE_VERSION) {
             // upgrade
             switch (version) {
-                // none yet
+                case 0:
+                    // brand new database file
+                    stmt.executeUpdate("CREATE TABLE coordinates (name TEXT UNIQUE, x NUMERIC, y NUMERIC, z NUMERIC, pitch NUMERIC, yaw NUMERIC, world TEXT)");
+                    stmt.executeUpdate("CREATE TABLE block_ids (id INTEGER, name TEXT)");
+                    stmt.executeUpdate("CREATE TABLE blocks (x NUMERIC, y NUMERIC, z NUMERIC, id INTEGER, meta INTEGER, data BLOB)");
+                    stmt.executeUpdate("PRAGMA user_version = 1");
+                case 1:
+                    stmt.executeUpdate("CREATE TABLE inv_labels (id INTEGER PRIMARY KEY, label TEXT UNIQUE)");
+                    stmt.executeUpdate("CREATE TABLE inventories (inv_id INTEGER, item_id INTEGER, name TEXT, data TEXT, size INTEGER)");
+                    stmt.executeUpdate("PRAGMA user_version = 2");
+                    break;
                 default:
                     // some odd bug or people messing with their database
                     throw new IllegalStateException(String.format("Unsupported zone version: %d.", version));
             }
         }
+        stmt.close();
     }
 
     /**
@@ -334,6 +338,125 @@ class ZoneStorage implements AutoCloseable {
         }
         connection.commit();
         connection.setAutoCommit(true);
+    }
+
+    /**
+     * Save an inventory to the zone storage.
+     *
+     * @param name      Name of inventory to store.
+     * @param inventory Name and contents of inventory to store.
+     * @throws SQLException
+     */
+    void saveInventory(String name, WarInventory inventory) throws SQLException {
+        int inv_id;
+        if (!containsInventory(name)) {
+            try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO inv_labels (id, label) VALUES (null, ?)")) {
+                stmt.setString(1, name);
+                stmt.executeUpdate();
+            }
+        }
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM inv_labels WHERE label = ? LIMIT 1")) {
+            stmt.setString(1, name);
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    inv_id = resultSet.getInt("id");
+                } else {
+                    throw new SQLException("Failed to find label id.");
+                }
+            }
+        }
+        try (PreparedStatement stmt = connection.prepareStatement("DELETE FROM inventories WHERE inv_id = ?")) {
+            stmt.setInt(1, inv_id);
+            stmt.executeUpdate();
+        }
+        try (PreparedStatement stmt = connection.prepareStatement("INSERT INTO inventories (inv_id, item_id, name, data, size) VALUES (?, ?, ?, ?, ?)")) {
+            WarItem[] contents = inventory.getContents();
+            for (int i = 0; i < WarInventory.INVENTORY_LENGTH + 5; i++) {
+                WarItem item;
+                if (i < contents.length) {
+                    item = contents[i];
+                } else if (i - WarInventory.INVENTORY_LENGTH == 0) {
+                    item = inventory.getHelmet();
+                } else if (i - WarInventory.INVENTORY_LENGTH == 1) {
+                    item = inventory.getChestplate();
+                } else if (i - WarInventory.INVENTORY_LENGTH == 2) {
+                    item = inventory.getLeggings();
+                } else if (i - WarInventory.INVENTORY_LENGTH == 3) {
+                    item = inventory.getBoots();
+                } else if (i - WarInventory.INVENTORY_LENGTH == 4) {
+                    item = inventory.getOffHand();
+                } else {
+                    continue;
+                }
+                if (item == null) {
+                    continue;
+                }
+                stmt.setInt(1, inv_id);
+                stmt.setInt(2, i);
+                stmt.setString(3, item.getBlockName());
+                stmt.setString(4, item.getSerialized());
+                stmt.setInt(5, item.getCount());
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
+    /**
+     * Retrieve all items in inventory from the database.
+     *
+     * @param name name of inventory to lookup.
+     * @return inventory, or null if not found.
+     * @throws SQLException
+     */
+    WarInventory getInventory(String name) throws SQLException {
+        int inv_id;
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT id FROM inv_labels WHERE label = ? LIMIT 1")) {
+            stmt.setString(1, name);
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                if (resultSet.next()) {
+                    inv_id = resultSet.getInt("id");
+                } else {
+                    return null;
+                }
+            }
+        }
+        WarItem[] contents = new WarItem[WarInventory.INVENTORY_LENGTH];
+        WarItem helmet = null, chestplate = null, leggings = null, boots = null, offHand = null;
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT item_id, name, data, size FROM inventories WHERE inv_id = ?")) {
+            stmt.setInt(1, inv_id);
+            try (ResultSet resultSet = stmt.executeQuery()) {
+                while (resultSet.next()) {
+                    int i = resultSet.getInt("item_id");
+                    WarItem item = new WarItem(resultSet.getString("name"), resultSet.getString("data"), resultSet.getInt("size"));
+                    if (i - WarInventory.INVENTORY_LENGTH == 0) {
+                        helmet = item;
+                    } else if (i - WarInventory.INVENTORY_LENGTH == 1) {
+                        chestplate = item;
+                    } else if (i - WarInventory.INVENTORY_LENGTH == 2) {
+                        leggings = item;
+                    } else if (i - WarInventory.INVENTORY_LENGTH == 3) {
+                        boots = item;
+                    } else if (i - WarInventory.INVENTORY_LENGTH == 4) {
+                        offHand = item;
+                    } else if (i < WarInventory.INVENTORY_LENGTH) {
+                        contents[i] = item;
+                    }
+                }
+            }
+        }
+        return new WarInventory(contents, helmet, chestplate, leggings, boots, offHand);
+    }
+
+    /**
+     * Check if the database contains an inventory.
+     *
+     * @param name Inventory name to check.
+     * @return true if inventory exists, false otherwise.
+     * @throws SQLException
+     */
+    boolean containsInventory(String name) throws SQLException {
+        return getInventory(name) != null;
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.tommytony.war;
 
 import com.tommytony.war.item.WarColor;
+import com.tommytony.war.item.WarInventory;
 import com.tommytony.war.item.WarItem;
 import com.tommytony.war.struct.WarBlock;
 import com.tommytony.war.struct.WarLocation;
@@ -216,8 +217,7 @@ public abstract class WarPlayer extends WarConsole {
      */
     public static class PlayerState {
         private int gameMode;
-        private WarItem[] inventory;
-        private WarItem helmet, chestplate, leggings, boots, offHand;
+        private WarInventory inventory;
         private double health;
         private double exhaustion;
         private double saturation;
@@ -226,16 +226,10 @@ public abstract class WarPlayer extends WarConsole {
         private double experience;
         private boolean flying;
 
-        public PlayerState(int gameMode, WarItem[] inventory, WarItem helmet, WarItem chestplate, WarItem leggings,
-                           WarItem boots, WarItem offHand, double health, double exhaustion, double saturation,
+        public PlayerState(int gameMode, WarInventory inventory, double health, double exhaustion, double saturation,
                            double hunger, double level, double experience, boolean flying) {
             this.gameMode = gameMode;
             this.inventory = inventory;
-            this.helmet = helmet;
-            this.chestplate = chestplate;
-            this.leggings = leggings;
-            this.boots = boots;
-            this.offHand = offHand;
             this.health = health;
             this.exhaustion = exhaustion;
             this.saturation = saturation;
@@ -249,112 +243,36 @@ public abstract class WarPlayer extends WarConsole {
             return gameMode;
         }
 
-        public void setGameMode(int gameMode) {
-            this.gameMode = gameMode;
-        }
-
-        public WarItem[] getInventory() {
+        public WarInventory getInventory() {
             return inventory;
-        }
-
-        public void setInventory(WarItem[] inventory) {
-            this.inventory = inventory;
-        }
-
-        public WarItem getHelmet() {
-            return helmet;
-        }
-
-        public void setHelmet(WarItem helmet) {
-            this.helmet = helmet;
-        }
-
-        public WarItem getChestplate() {
-            return chestplate;
-        }
-
-        public void setChestplate(WarItem chestplate) {
-            this.chestplate = chestplate;
-        }
-
-        public WarItem getLeggings() {
-            return leggings;
-        }
-
-        public void setLeggings(WarItem leggings) {
-            this.leggings = leggings;
-        }
-
-        public WarItem getBoots() {
-            return boots;
-        }
-
-        public void setBoots(WarItem boots) {
-            this.boots = boots;
-        }
-
-        public WarItem getOffHand() {
-            return offHand;
-        }
-
-        public void setOffHand(WarItem offHand) {
-            this.offHand = offHand;
         }
 
         public double getHealth() {
             return health;
         }
 
-        public void setHealth(double health) {
-            this.health = health;
-        }
-
         public double getExhaustion() {
             return exhaustion;
-        }
-
-        public void setExhaustion(double exhaustion) {
-            this.exhaustion = exhaustion;
         }
 
         public double getSaturation() {
             return saturation;
         }
 
-        public void setSaturation(double saturation) {
-            this.saturation = saturation;
-        }
-
         public double getHunger() {
             return hunger;
-        }
-
-        public void setHunger(double hunger) {
-            this.hunger = hunger;
         }
 
         public double getLevel() {
             return level;
         }
 
-        public void setLevel(double level) {
-            this.level = level;
-        }
-
         public double getExperience() {
             return experience;
         }
 
-        public void setExperience(double experience) {
-            this.experience = experience;
-        }
-
         public boolean isFlying() {
             return flying;
-        }
-
-        public void setFlying(boolean flying) {
-            this.flying = flying;
         }
     }
 }
