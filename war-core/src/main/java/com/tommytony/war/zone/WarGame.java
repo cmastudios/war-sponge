@@ -71,6 +71,7 @@ public class WarGame {
         if (teams.size() == 0) {
             throw new IllegalStateException("No teams in this warzone.");
         }
+        Collections.shuffle(teams);
         Optional<Team> first = teams.stream().sorted(Comparator.comparingInt(team -> team.players.size())).findFirst();
         if (!first.isPresent()) {
             throw new IllegalStateException("No teams found.");
